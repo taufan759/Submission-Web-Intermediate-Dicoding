@@ -1,44 +1,41 @@
-class LoginPresenter {
+// Change in register-presenter.js
+class RegisterPresenter {  // Changed from LoginPresenter
     constructor({ view, apiService, router }) {
+        console.log('RegisterPresenter constructor called');
         this.view = view;
         this.apiService = apiService;
         this.router = router || window.router;
         
-        // Pastikan handler untuk login terdaftar
-        this.view.setLoginSubmitHandler(this.onLoginSubmit.bind(this));
+        // Log when setting the handler
+        console.log('Setting register submit handler');
+        this.view.setRegisterSubmitHandler(this.onRegisterSubmit.bind(this));
+        console.log('Register submit handler set');
     }
     
     init() {
-        // Metode ini mungkin dipanggil dari tempat lain
-        console.log('LoginPresenter initialized');
+        console.log('RegisterPresenter initialized');
     }
 
-    async onLoginSubmit(email, password) {
+    async onRegisterSubmit(name, email, password) {
         try {
-            console.log('Login submit handler called');
+            console.log('Register submit handler called');
             this.view.showLoading(true);
             
-            // Beri delay kecil untuk UX
             await new Promise(resolve => setTimeout(resolve, 500));
             
-            const result = await this.apiService.login(email, password);
-            console.log('Login success:', result);
+            const result = await this.apiService.register(name, email, password);
+            console.log('Register success:', result);
 
-            // Memicu event autentikasi berubah
-            document.dispatchEvent(new Event('authChanged'));
+            this.view.showSuccess('✅ Pendaftaran berhasil! Silakan login.');
 
-            // Tampilkan pesan sukses
-            this.view.showSuccess('✅ Berhasil login!');
-
-            // Arahkan ke halaman utama setelah delay
             setTimeout(() => {
-                this.router.navigateTo('/');
+                this.router.navigateTo('/masuk');
             }, 1000); 
 
             return true;
         } catch (error) {
-            console.error('Login error in presenter:', error);
-            this.view.showAlert(error.message || 'Terjadi kesalahan saat login');
+            console.error('Register error in presenter:', error);
+            this.view.showAlert(error.message || 'Terjadi kesalahan saat mendaftar');
             this.view.showLoading(false);
             throw error;
         }

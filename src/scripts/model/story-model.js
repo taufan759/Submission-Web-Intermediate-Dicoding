@@ -1,26 +1,31 @@
 class StoryModel {
   constructor(apiService) {
     this.apiService = apiService;
-    this.stories = [];
+    console.log('StoryModel initialized');
   }
   
   async getAllStories() {
     try {
+      console.log('Getting all stories');
       const stories = await this.apiService.getAllStories();
-      this.stories = stories;
-      return stories;
+      return stories || [];
     } catch (error) {
-      console.error('Error in StoryModel.getAllStories:', error);
-      return [];
+      console.error('Error getting stories:', error);
+      throw error;
     }
   }
   
-  async addStory(description, photoBlob, lat, lon) {
+  async addNewStory(description, photoBlob, lat, lon) {
     try {
-      const response = await this.apiService.addNewStory(description, photoBlob, lat, lon);
-      return response;
+      console.log('Adding new story');
+      if (!description || !photoBlob) {
+        throw new Error('Description and photo are required');
+      }
+      
+      const result = await this.apiService.addNewStory(description, photoBlob, lat, lon);
+      return result;
     } catch (error) {
-      console.error('Error in StoryModel.addStory:', error);
+      console.error('Error adding story:', error);
       throw error;
     }
   }

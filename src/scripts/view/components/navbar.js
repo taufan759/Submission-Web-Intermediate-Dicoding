@@ -6,34 +6,36 @@ class Navbar {
   _bindEvents() {
     // Wait for DOM to be fully loaded
     document.addEventListener('DOMContentLoaded', () => {
-      const navToggle = document.getElementById('hamburgerButton');
-      const navigation = document.getElementById('navigation');
+      const navToggle = document.getElementById('navToggle');
+      const navMenu = document.querySelector('.nav-menu');
       const authNavItem = document.getElementById('authNavItem');
       
       // Toggle navigation on hamburger button click
-      if (navToggle && navigation) {
+      if (navToggle && navMenu) {
         navToggle.addEventListener('click', () => {
-          navigation.classList.toggle('active');
+          navMenu.classList.toggle('active');
           
           // Update ARIA attributes for accessibility
-          const expanded = navigation.classList.contains('active');
-          navToggle.setAttribute('aria-expanded', expanded);
+          const expanded = navToggle.getAttribute('aria-expanded') === 'true';
+          navToggle.setAttribute('aria-expanded', !expanded);
           
           // Change icon based on state
           navToggle.innerHTML = expanded 
-            ? '<i class="fa fa-times" aria-hidden="true"></i>' 
-            : '<i class="fa fa-bars" aria-hidden="true"></i>';
+            ? '<i class="fas fa-bars" aria-hidden="true"></i>'
+            : '<i class="fas fa-times" aria-hidden="true"></i>';
         });
       }
       
       // Close navigation when clicking outside
       document.addEventListener('click', (event) => {
-        if (navigation && navigation.classList.contains('active') && 
-            !event.target.closest('#navigation') && 
-            !event.target.closest('#hamburgerButton')) {
-          navigation.classList.remove('active');
-          navToggle.setAttribute('aria-expanded', 'false');
-          navToggle.innerHTML = '<i class="fa fa-bars" aria-hidden="true"></i>';
+        if (navMenu && navMenu.classList.contains('active') && 
+            !event.target.closest('.nav-menu') && 
+            !event.target.closest('#navToggle')) {
+          navMenu.classList.remove('active');
+          if (navToggle) {
+            navToggle.setAttribute('aria-expanded', 'false');
+            navToggle.innerHTML = '<i class="fas fa-bars" aria-hidden="true"></i>';
+          }
         }
       });
       
@@ -68,14 +70,16 @@ class Navbar {
           logoutButton.addEventListener('click', (event) => {
             event.preventDefault();
             localStorage.removeItem('token');
-            window.location.hash = '#/login';
+            localStorage.removeItem('userId');
+            localStorage.removeItem('name');
+            window.location.hash = '#/masuk';
             this.updateAuthNavItem();
           });
         }
       } else {
         authNavItem.innerHTML = `
-          <a href="#/login">
-            <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Login
+          <a href="#/masuk">
+            <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Masuk
           </a>
         `;
       }
@@ -84,7 +88,7 @@ class Navbar {
   
   updateActiveLink() {
     const currentHash = window.location.hash || '#/';
-    const navLinks = document.querySelectorAll('#navigation a');
+    const navLinks = document.querySelectorAll('.nav-menu a');
     
     navLinks.forEach(link => {
       const href = link.getAttribute('href');

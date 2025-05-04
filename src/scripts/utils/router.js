@@ -4,7 +4,10 @@ class Router {
     this.currentUrl = '';
     
     // Periksa perubahan hash dengan listener yang tepat
-    window.addEventListener('hashchange', this._handleRouteChange.bind(this));
+    window.addEventListener('hashchange', () => {
+      console.log('Hash changed to:', window.location.hash);
+      this._loadRoute();
+    });
   }
 
   addRoute(url, callback, options = {}) {
@@ -21,11 +24,6 @@ class Router {
   setFallback(callback) {
     this.fallbackCallback = callback;
     return this;
-  }
-
-  _handleRouteChange() {
-    console.log('Hash berubah ke:', window.location.hash); 
-    this._loadRoute();
   }
 
   _loadRoute() {
@@ -54,7 +52,11 @@ class Router {
         return;
       }
       
-      route.callback();
+      try {
+        route.callback();
+      } catch (error) {
+        console.error('Error in route callback:', error);
+      }
     } else if (this.fallbackCallback) {
       console.log('Route tidak ditemukan, menggunakan fallback');
       this.fallbackCallback();
@@ -67,9 +69,30 @@ class Router {
   }
 
   init() {
+    console.log('Router initialized');
     // Jalankan _loadRoute saat inisialisasi
     this._loadRoute();
   }
 }
 
 const router = new Router();
+
+// Make sure navigation links work
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Setting up navigation link handlers');
+  
+  // Handle all navigation links
+  document.body.addEventListener('click', (e) => {
+    // Find closest anchor tag
+    const link = e.target.closest('a');
+    if (!link) return;
+    
+    const href = link.getAttribute('href');
+    if (href && href.startsWith('#/')) {
+      e.preventDefault();
+      console.log('Navigation link clicked:', href);
+      const path = href.substring(1); // Remove the # character
+      router.navigateTo(path);
+    }
+  });
+});

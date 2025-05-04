@@ -8,20 +8,35 @@ class RegisterView {
         this.container.innerHTML = `
             <section class="auth-section">
                 <div class="container">
-                    <h2 class="section-title">Daftar Akun Baru</h2>
-                    <div class="auth-card">
+                <div class="auth-card improved">
+            <div class="auth-header">
+                    <h2 class="auth-title">Daftar Akun Baru</h2>
+                    <p class="auth-subtitle">Bagikan cerita dan jelajahi peta interaktif</p>
+                    </div>
+
                         <form id="registerForm">
                             <div class="form-group">
                                 <label for="name">Nama</label>
+                                <div class="input-icon-wrapper">
+                                <i class="fas fa-user input-icon"></i>
                                 <input type="text" id="name" name="name" required placeholder="Masukkan nama Anda">
                             </div>
+                            </div>
+
                             <div class="form-group">
                                 <label for="email">Email</label>
+                                <div class="input-icon-wrapper">
+                  <i class="fas fa-envelope input-icon"></i>
                                 <input type="email" id="email" name="email" required placeholder="Masukkan email Anda">
                             </div>
+                            </div>
+                            
                             <div class="form-group">
                                 <label for="password">Password</label>
-                                <input type="password" id="password" name="password" required minlength="6" placeholder="Minimal 6 karakter">
+                                <div class="input-icon-wrapper">
+                  <i class="fas fa-lock input-icon"></i>
+                                <input type="password" id="password" name="password" required minlength="6" placeholder="Minimal 8 karakter">
+                            </div>
                             </div>
                             <div class="form-actions">
                                 <button type="submit" id="registerButton" class="btn btn-primary">
@@ -89,9 +104,15 @@ class RegisterView {
 
     _initListeners() {
         const registerForm = document.querySelector('#registerForm');
-        if (registerForm) {  // Tambahkan pemeriksaan
-            registerForm.addEventListener('submit', async (event) => {
+        if (registerForm) {
+            console.log('Found register form, attaching event listener');
+            // Remove any existing event listeners to prevent duplicates
+            const newRegisterForm = registerForm.cloneNode(true);
+            registerForm.parentNode.replaceChild(newRegisterForm, registerForm);
+            
+            newRegisterForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
+                console.log('Register form submitted');
     
                 const name = document.querySelector('#name').value;
                 const email = document.querySelector('#email').value;
@@ -111,6 +132,7 @@ class RegisterView {
     
                 try {
                     if (this.onRegisterSubmit) {
+                        console.log('Calling onRegisterSubmit handler');
                         await this.onRegisterSubmit(name, email, password);
                     } else {
                         console.error('Register handler belum terdaftar');
@@ -149,39 +171,59 @@ class RegisterView {
         }
     }
 
-    showAlert(message) {
-        const alertContainer = document.getElementById('alertContainer');
-        alertContainer.innerHTML = `
-            <div class="alert alert-danger" style="position: fixed; top: 20px; 
-            left: 50%; transform: translateX(-50%); background-color: #f44336; 
-            color: white; padding: 15px 25px; border-radius: 5px; box-shadow: 
-            0 4px 6px rgba(0,0,0,0.1); font-size: 16px; animation: slideIn 0.5s ease-out;">
-                ❌ ${message}
-            </div>
-        `;
-        
-        setTimeout(() => {
-            alertContainer.innerHTML = '';
-        }, 3000);
-    }
+    // Update the showAlert and showSuccess methods in both login-view.js and register-view.js
 
-    showSuccess(message) {
-        this.showLoading(false);
-        
-        const alertContainer = document.getElementById('alertContainer');
-        alertContainer.innerHTML = `
-            <div class="alert alert-success" style="position: fixed; top: 20px; left: 50%; 
-            transform: translateX(-50%); background-color: rgba(31, 134, 193, 0.82); color:
-            white; padding: 15px 25px; border-radius: 5px; box-shadow: 
-            0 4px 6px rgba(0,0,0,0.1); font-size: 16px; animation: slideIn 0.5s ease-out;">
-                ${message}
-            </div>
-        `;
-        
-        setTimeout(() => {
-            alertContainer.innerHTML = '';
-        }, 2000);
+showAlert(message) {
+    const alertContainer = document.getElementById('alertContainer');
+    if (!alertContainer) return;
+    
+    // Remove any existing alerts
+    const existingAlert = document.querySelector('.alert');
+    if (existingAlert) {
+      existingAlert.remove();
     }
+    
+    const alertElement = document.createElement('div');
+    alertElement.className = 'alert alert-danger';
+    alertElement.style.cssText = 'position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background-color: #f44336; color: white; padding: 12px 24px; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 1050; max-width: 90%;';
+    alertElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+    
+    alertContainer.appendChild(alertElement);
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      alertElement.style.opacity = '0';
+      alertElement.style.transition = 'opacity 0.5s ease';
+      setTimeout(() => alertElement.remove(), 500);
+    }, 3000);
+  }
+  
+  showSuccess(message) {
+    this.showLoading(false);
+    
+    const alertContainer = document.getElementById('alertContainer');
+    if (!alertContainer) return;
+    
+    // Remove any existing alerts
+    const existingAlert = document.querySelector('.alert');
+    if (existingAlert) {
+      existingAlert.remove();
+    }
+    
+    const alertElement = document.createElement('div');
+    alertElement.className = 'alert alert-success';
+    alertElement.style.cssText = 'position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background-color: #4CAF50; color: white; padding: 12px 24px; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 1050; max-width: 90%;';
+    alertElement.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+    
+    alertContainer.appendChild(alertElement);
+    
+    // Auto-hide after 2 seconds
+    setTimeout(() => {
+      alertElement.style.opacity = '0';
+      alertElement.style.transition = 'opacity 0.5s ease';
+      setTimeout(() => alertElement.remove(), 500);
+    }, 2000);
+  }
 
     setRegisterSubmitHandler(handler) {
         this.onRegisterSubmit = handler;

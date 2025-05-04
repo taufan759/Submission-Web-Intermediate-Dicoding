@@ -1,33 +1,37 @@
 class AddStoryPresenter {
-  constructor({ view, apiService, router }) {
+  constructor({ view, model }) {
     this.view = view;
-    this.apiService = apiService;
-    this.router = router || window.router;
+    this.model = model;
+    console.log('AddStoryPresenter created');
   }
   
   init() {
-    this.view.setRegisterSubmitHandler(this.onRegisterSubmit.bind(this));
+    console.log('AddStoryPresenter initialized');
+    this.view.setSubmitCallback(this.onAddStory.bind(this));
   }
   
-  async onRegisterSubmit(name, email, password) {
+  async onAddStory(description, photoBlob, lat, lon) {
     try {
-      this.view.showLoading(true);
+      console.log('AddStoryPresenter.onAddStory called with:', { description, lat, lon });
       
-      await this.apiService.register(name, email, password);
+      if (!description || !photoBlob) {
+        throw new Error('Cerita dan foto wajib diisi');
+      }
       
-      this.view.showSuccess('Pendaftaran berhasil! Silakan login.');
+      const result = await this.model.addNewStory(description, photoBlob, lat, lon);
+      console.log('Story added successfully:', result);
+      
+      this.view.showSuccess('Cerita berhasil ditambahkan!');
       
       setTimeout(() => {
-        this.router.navigateTo('/masuk');
+        router.navigateTo('/');
       }, 1500);
       
       return true;
     } catch (error) {
-      console.error('Register error:', error);
-      this.view.showAlert(error.message);
+      console.error('Add story error:', error);
+      this.view.showError(error.message || 'Gagal menambahkan cerita');
       return false;
-    } finally {
-      this.view.showLoading(false);
     }
   }
 }

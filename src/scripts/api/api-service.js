@@ -77,38 +77,45 @@ class ApiService {
     }
   }
 
-  async addNewStory(description, photoBlob, lat, lon) {
-    try {
-      const token = localStorage.getItem('token');
-      console.log('Adding new story with token:', token ? 'Token exists' : 'No token');
-      
-      if (!token) throw new Error('Token tidak ditemukan. Silakan login terlebih dahulu.');
+  // Inside apiService.addNewStory method
+async addNewStory(description, photoBlob, lat, lon) {
+  try {
+    const token = localStorage.getItem('token');
+    console.log('Adding new story with token:', token ? 'Token exists' : 'No token');
+    
+    if (!token) throw new Error('Token tidak ditemukan. Silakan login terlebih dahulu.');
 
-      const formData = new FormData();
-      formData.append('description', description);
-      formData.append('photo', photoBlob, 'photo.jpg');
-      if (lat && lon) {
-        formData.append('lat', lat);
-        formData.append('lon', lon);
-      }
-
-      const response = await fetch(`${this.baseUrl}/stories`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      const responseJson = await response.json();
-      console.log('Add story response:', responseJson);
-      
-      if (responseJson.error) throw new Error(responseJson.message);
-
-      return responseJson;
-    } catch (error) {
-      console.error('Error adding story:', error);
-      throw new Error(`Failed to add story: ${error.message}`);
+    // Create form data
+    const formData = new FormData();
+    formData.append('description', description);
+    formData.append('photo', photoBlob, 'photo.jpg');
+    
+    // Only add lat/lon if they exist
+    if (lat !== null && lon !== null) {
+      formData.append('lat', lat);
+      formData.append('lon', lon);
     }
+
+    console.log('Sending request to add story');
+    const response = await fetch(`${this.baseUrl}/stories`, {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData,
+    });
+
+    const responseJson = await response.json();
+    console.log('Add story response:', responseJson);
+    
+    if (responseJson.error) throw new Error(responseJson.message);
+
+    return responseJson;
+  } catch (error) {
+    console.error('Error adding story:', error);
+    throw new Error(`Failed to add story: ${error.message}`);
   }
+}
 }
 
 const apiService = new ApiService();

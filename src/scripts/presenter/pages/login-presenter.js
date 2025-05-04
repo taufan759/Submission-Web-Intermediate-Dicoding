@@ -1,11 +1,14 @@
 class LoginPresenter {
     constructor({ view, apiService, router }) {
+        console.log('LoginPresenter constructor called');
         this.view = view;
         this.apiService = apiService;
         this.router = router || window.router;
         
-        this.view.setLoginSubmitHandler(this.onLoginSubmit.bind(this));
-    }
+        console.log('Setting login submit handler');
+    this.view.setLoginSubmitHandler(this.onLoginSubmit.bind(this));
+    console.log('Login submit handler set');
+}
     
     init() {
         // Tidak ada yang perlu dilakukan di sini karena handler sudah diatur di constructor
