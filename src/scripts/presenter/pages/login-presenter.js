@@ -1,14 +1,18 @@
 class LoginPresenter {
-    constructor({ view, apiService }) {
+    constructor({ view, apiService, router }) {
         this.view = view;
         this.apiService = apiService;
+        this.router = router || window.router;
         
         this.view.setLoginSubmitHandler(this.onLoginSubmit.bind(this));
+    }
+    
+    init() {
+        // Metode init kosong untuk konsistensi dengan presenter lain
     }
 
     async onLoginSubmit(email, password) {
         try {
-            
             this.view.showLoading(true);
             
             await this.apiService.login(email, password);
@@ -18,7 +22,7 @@ class LoginPresenter {
             this.view.showSuccess('✅ Berhasil login');
 
             setTimeout(() => {
-                router.navigateTo('/');
+                this.router.navigateTo('/');
             }, 1000); 
 
             return true;
@@ -26,7 +30,6 @@ class LoginPresenter {
             this.view.showAlert(error.message);
             throw error;
         } finally {
-            // Menyembunyikan loading
             this.view.showLoading(false);
         }
     }

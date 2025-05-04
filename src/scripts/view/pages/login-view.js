@@ -29,7 +29,7 @@ class LoginView {
                             </div>
                         </form>
                         <div class="auth-footer">
-                            <p>Belum punya akun? <a href="/register" data-link>Daftar Sekarang</a></p>
+                            <p>Belum punya akun? <a href="#/daftar" data-link>Daftar Sekarang</a></p>
                         </div>
                     </div>
                 </div>
@@ -37,7 +37,6 @@ class LoginView {
             <div id="alertContainer"></div> 
         `;
 
-    
         if (!document.getElementById('loaderStyles')) {
             const style = document.createElement('style');
             style.id = 'loaderStyles';
@@ -92,30 +91,23 @@ class LoginView {
             const email = document.querySelector('#email').value;
             const password = document.querySelector('#password').value;
             
-           
             this.showLoading(true);
 
             try {
                 if (this.onLoginSubmit) {
                     await this.onLoginSubmit(email, password);
-                    this.showSuccess('✅ Berhasil login!');
-                    
-                    setTimeout(() => {
-                        router.navigateTo('/'); 
-                    }, 2000); 
                 }
             } catch (error) {
                 this.showAlert(error.message);
-                
                 this.showLoading(false);
             }
         });
 
-        const registerLink = document.querySelector('a[href="/register"]');
+        const registerLink = document.querySelector('a[href="#/daftar"]');
         if (registerLink) {
             registerLink.addEventListener('click', (event) => {
                 event.preventDefault();
-                router.navigateTo('/register');
+                router.navigateTo('/daftar');
             });
         }
     }
@@ -144,11 +136,10 @@ class LoginView {
         
         setTimeout(() => {
             alertContainer.innerHTML = '';
-        }, 1000);
+        }, 3000);
     }
 
     showSuccess(message) {
-        
         this.showLoading(false);
         
         const alertContainer = document.getElementById('alertContainer');

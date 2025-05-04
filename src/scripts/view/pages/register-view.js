@@ -33,7 +33,7 @@ class RegisterView {
                             </div>
                         </form>
                         <div class="auth-footer">
-                            <p>Sudah punya akun? <a href="/login" data-link>Masuk di Sini</a></p>
+                            <p>Sudah punya akun? <a href="#/masuk" data-link>Masuk di Sini</a></p>
                         </div>
                     </div>
                 </div>
@@ -41,7 +41,6 @@ class RegisterView {
             <div id="alertContainer"></div>
         `;
 
-       
         if (!document.getElementById('loaderStyles')) {
             const style = document.createElement('style');
             style.id = 'loaderStyles';
@@ -97,26 +96,23 @@ class RegisterView {
             const email = document.querySelector('#email').value;
             const password = document.querySelector('#password').value;
 
-            
             this.showLoading(true);
 
             try {
                 if (this.onRegisterSubmit) {
                     await this.onRegisterSubmit(name, email, password);
-                    this.showSuccess('✅ Berhasil mendaftar!');
                 }
             } catch (error) {
                 this.showAlert(error.message);
-                
                 this.showLoading(false);
             }
         });
 
-        const loginLink = document.querySelector('a[href="/login"]');
+        const loginLink = document.querySelector('a[href="#/masuk"]');
         if (loginLink) {
             loginLink.addEventListener('click', (event) => {
                 event.preventDefault();
-                router.navigateTo('/login');
+                router.navigateTo('/masuk');
             });
         }
     }
@@ -149,7 +145,6 @@ class RegisterView {
     }
 
     showSuccess(message) {
-      
         this.showLoading(false);
         
         const alertContainer = document.getElementById('alertContainer');

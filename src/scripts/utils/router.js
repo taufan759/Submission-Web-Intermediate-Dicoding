@@ -42,19 +42,16 @@ class Router {
     
     console.log('Current URL:', url); 
 
-    
     const route = this.routes.find((route) => {
       return route.url === url;
     });
 
     if (route) {
-     
       if (route.requiresAuth && !isAuthenticated) {
         console.log('Halaman memerlukan login. Mengalihkan ke halaman login...');
-        this.navigateTo('/login');
+        this.navigateTo('/masuk');
         return;
       }
-      
       
       if (route.guestOnly && isAuthenticated) {
         console.log('Halaman hanya untuk tamu. Mengalihkan ke beranda...');
