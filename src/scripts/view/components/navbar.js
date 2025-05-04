@@ -1,243 +1,102 @@
 class Navbar {
   constructor() {
-    this._hamburgerButton = document.getElementById('hamburgerButton');
-    this._navMenu = document.getElementById('navigation');
-    this._activeLink = null; 
-    
-    this._init();
-    this._renderNavItems();
-    
-   
-    window.addEventListener('storage', (event) => {
-      if (event.key === 'token') {
-        this._renderNavItems();
+    this._bindEvents();
+  }
+
+  _bindEvents() {
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      const navToggle = document.getElementById('hamburgerButton');
+      const navigation = document.getElementById('navigation');
+      const authNavItem = document.getElementById('authNavItem');
+      
+      // Toggle navigation on hamburger button click
+      if (navToggle && navigation) {
+        navToggle.addEventListener('click', () => {
+          navigation.classList.toggle('active');
+          
+          // Update ARIA attributes for accessibility
+          const expanded = navigation.classList.contains('active');
+          navToggle.setAttribute('aria-expanded', expanded);
+          
+          // Change icon based on state
+          navToggle.innerHTML = expanded 
+            ? '<i class="fa fa-times" aria-hidden="true"></i>' 
+            : '<i class="fa fa-bars" aria-hidden="true"></i>';
+        });
       }
-    });
-    
-    
-    document.addEventListener('authChanged', () => {
-      this._renderNavItems();
+      
+      // Close navigation when clicking outside
+      document.addEventListener('click', (event) => {
+        if (navigation && navigation.classList.contains('active') && 
+            !event.target.closest('#navigation') && 
+            !event.target.closest('#hamburgerButton')) {
+          navigation.classList.remove('active');
+          navToggle.setAttribute('aria-expanded', 'false');
+          navToggle.innerHTML = '<i class="fa fa-bars" aria-hidden="true"></i>';
+        }
+      });
+      
+      // Update auth navigation item based on authentication state
+      this.updateAuthNavItem();
+      
+      // Add event listener for hash changes to update active link
+      window.addEventListener('hashchange', () => {
+        this.updateActiveLink();
+      });
+      
+      // Initialize active link
+      this.updateActiveLink();
     });
   }
   
-  _init() {
-    this._hamburgerButton.addEventListener('click', (event) => {
-      this._toggleMenu();
-    });
-    
-    
-    document.addEventListener('click', (event) => {
-      if (!this._hamburgerButton.contains(event.target) && 
-          !this._navMenu.contains(event.target)) {
-        this._navMenu.classList.remove('active');
-      }
-    });
-    
-    
-    window.addEventListener('resize', () => {
-      if (window.innerWidth > 768) {
-        this._navMenu.classList.remove('active');
-      }
-    });
-  }
-  
-  _renderNavItems() {
-    
-    if (!this._navMenu) return;
-    
-    
-    const isAuthenticated = localStorage.getItem('token') !== null;
-    
-    this._navMenu.innerHTML = `
-      <style>
-        .nav-list {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 8px; 
-        }
-        
-        @media (max-width: 768px) {
-          .nav-list {
-            width: 100%;
-          }
-        }
-        
-        @media (min-width: 769px) {
-          .nav-list {
-            flex-direction: row;
-            gap: 20px; 
-          }
-        }
-        
-        .nav-item {
-          margin: 0;
-          padding: 0;
-        }
-        
-       
-        @media (max-width: 768px) {
-          .nav-item {
-            width: 100%;
-          }
-        }
-        
-        .nav-link {
-          position: relative;
-          text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          padding: 8px 0; 
-          background: transparent;
-          border: none;
-          color: #ffffff;
-          font-size: 16px;
-          cursor: pointer;
-        }
-        
-     
-        @media (max-width: 768px) {
-          .nav-link {
-            padding: 8px;
-          }
-        }
-        
-        
-        .nav-link:hover {
-          color: #ffffff;
-          background: transparent;
-          text-decoration: none;
-        }
-        
-        .nav-link i {
-          margin-right: 8px;
-        }
-        
+  updateAuthNavItem() {
+    const authNavItem = document.getElementById('authNavItem');
+    if (authNavItem) {
+      const isLoggedIn = localStorage.getItem('token') !== null;
       
-        .nav-link-content {
-          position: relative;
-          display: inline-block;
-        }
+      if (isLoggedIn) {
+        authNavItem.innerHTML = `
+          <a href="#" id="logoutButton">
+            <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
+          </a>
+        `;
         
-        .nav-link-content::after {
-          content: '';
-          position: absolute;
-          bottom: -5px;
-          left: 0;
-          width: 0;
-          height: 2px;
-          background-color: #ffffff;
-          transition: width 0.3s ease;
+        // Add logout event listener
+        const logoutButton = document.getElementById('logoutButton');
+        if (logoutButton) {
+          logoutButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            localStorage.removeItem('token');
+            window.location.hash = '#/login';
+            this.updateAuthNavItem();
+          });
         }
-        
-        .nav-link.active .nav-link-content::after {
-          width: 100%;
-        }
-        
-        @media (max-width: 768px) {
-          .nav-link-content::after {
-            bottom: -5px;
-            height: 2px;
-          }
-        }
-      </style>
-      <ul class="nav-list">
-        <li class="nav-item">
-          <a href="/" class="nav-link" data-link>
-            <div class="nav-link-content">
-              <i class="fas fa-home" aria-hidden="true"></i>
-              <span>Beranda</span>
-            </div>
+      } else {
+        authNavItem.innerHTML = `
+          <a href="#/login">
+            <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Login
           </a>
-        </li>
-        ${isAuthenticated ? `
-        <li class="nav-item">
-          <a href="/add-story" class="nav-link" data-link>
-            <div class="nav-link-content">
-              <i class="fas fa-plus" aria-hidden="true"></i>
-              <span>Tambah Cerita</span>
-            </div>
-          </a>
-        </li>
-        ` : ''}
-        <li class="nav-item">
-          ${isAuthenticated ? `
-          <a href="#" class="nav-link" id="logoutButton">
-            <div class="nav-link-content">
-              <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
-              <span>Logout</span>
-            </div>
-          </a>
-          ` : `
-          <a href="/login" class="nav-link" data-link>
-            <div class="nav-link-content">
-              <i class="fas fa-sign-in-alt" aria-hidden="true"></i>
-              <span>Login</span>
-            </div>
-          </a>
-          `}
-        </li>
-      </ul>
-    `;
-    
-    
-    const navLinks = this._navMenu.querySelectorAll('.nav-link[data-link]');
-    
-    const currentPath = window.location.pathname;
-    
-    navLinks.forEach(link => {
-      const url = link.getAttribute('href');
-      
-     
-      if (url === currentPath) {
-        link.classList.add('active');
-        this._activeLink = link;
+        `;
       }
-      
-      link.addEventListener('click', (event) => {
-        event.preventDefault();
-        
-       
-        if (this._activeLink) {
-          this._activeLink.classList.remove('active');
-        }
-        
-        
-        link.classList.add('active');
-        this._activeLink = link;
-        
-        const url = link.getAttribute('href');
-        router.navigateTo(url);
-        this._navMenu.classList.remove('active');
-      });
-    });
-    
-    
-    const logoutButton = document.getElementById('logoutButton');
-    if (logoutButton) {
-      logoutButton.addEventListener('click', (event) => {
-        event.preventDefault();
-        this._handleLogout();
-        this._navMenu.classList.remove('active');
-      });
     }
   }
   
-  _handleLogout() {
-   
-    localStorage.removeItem('token');
+  updateActiveLink() {
+    const currentHash = window.location.hash || '#/';
+    const navLinks = document.querySelectorAll('#navigation a');
     
-    
-    document.dispatchEvent(new Event('authChanged'));
-    
-    
-    router.navigateTo('/login');
-  }
-  
-  _toggleMenu() {
-    this._navMenu.classList.toggle('active');
+    navLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      
+      if (href === currentHash) {
+        link.classList.add('active');
+        link.setAttribute('aria-current', 'page');
+      } else {
+        link.classList.remove('active');
+        link.removeAttribute('aria-current');
+      }
+    });
   }
 }
 
