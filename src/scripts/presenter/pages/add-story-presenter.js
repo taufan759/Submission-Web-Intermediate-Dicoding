@@ -1,30 +1,33 @@
 class AddStoryPresenter {
-  constructor({ view, model }) {
+  constructor({ view, apiService, router }) {
     this.view = view;
-    this.model = model;
+    this.apiService = apiService;
+    this.router = router || window.router;
   }
   
   init() {
-    this.view.setSubmitCallback(this._handleSubmit.bind(this));
+    this.view.setRegisterSubmitHandler(this.onRegisterSubmit.bind(this));
   }
   
-  async _handleSubmit(title, description, photoBlob, lat, lon) {
+  async onRegisterSubmit(name, email, password) {
     try {
-      this.view.showLoading();
+      this.view.showLoading(true);
       
-      const result = await this.model.addNewStory(title, description, photoBlob, lat, lon);
+      await this.apiService.register(name, email, password);
       
-      this.view.hideLoading();
-      this.view.showSuccess('Cerita berhasil dikirim!');
+      this.view.showSuccess('Pendaftaran berhasil! Silakan login.');
       
-     
       setTimeout(() => {
-        router.navigateTo('/');
-      }, 1000);
+        this.router.navigateTo('/masuk');
+      }, 1500);
       
+      return true;
     } catch (error) {
-      this.view.hideLoading();
-      this.view.showError(`Gagal mengirim cerita: ${error.message}`);
+      console.error('Register error:', error);
+      this.view.showAlert(error.message);
+      return false;
+    } finally {
+      this.view.showLoading(false);
     }
   }
 }

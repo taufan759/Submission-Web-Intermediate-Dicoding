@@ -85,32 +85,49 @@ class LoginView {
 
     _initListeners() {
         const loginForm = document.querySelector('#loginForm');
-        loginForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-
-            const email = document.querySelector('#email').value;
-            const password = document.querySelector('#password').value;
-            
-            this.showLoading(true);
-
-            try {
-                if (this.onLoginSubmit) {
-                    await this.onLoginSubmit(email, password);
-                }
-            } catch (error) {
-                this.showAlert(error.message);
-                this.showLoading(false);
-            }
-        });
-
-        const registerLink = document.querySelector('a[href="#/daftar"]');
-        if (registerLink) {
-            registerLink.addEventListener('click', (event) => {
+        if (loginForm) {  // Tambahkan pemeriksaan
+            loginForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
-                router.navigateTo('/daftar');
+    
+                const email = document.querySelector('#email').value;
+                const password = document.querySelector('#password').value;
+                
+                if (!email || !password) {
+                    this.showAlert('Email dan password wajib diisi!');
+                    return;
+                }
+                
+                this.showLoading(true);
+    
+                try {
+                    if (this.onLoginSubmit) {
+                        await this.onLoginSubmit(email, password);
+                    } else {
+                        console.error('Login handler belum terdaftar');
+                        this.showAlert('Terjadi kesalahan sistem');
+                        this.showLoading(false);
+                    }
+                } catch (error) {
+                    this.showAlert(error.message || 'Terjadi kesalahan saat login');
+                    this.showLoading(false);
+                }
             });
+        } else {
+            console.error('Login form tidak ditemukan');
         }
+        
+
+        setTimeout(() => {
+            const registerLink = document.querySelector('a[href="#/daftar"]');
+            if (registerLink) {
+                registerLink.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    router.navigateTo('/daftar');
+                });
+            }
+        }, 100);
     }
+    
 
     showLoading(isLoading) {
         const button = document.getElementById('loginButton');

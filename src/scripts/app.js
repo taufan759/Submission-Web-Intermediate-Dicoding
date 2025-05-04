@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   const app = {
     async init() {
+      console.log('App initializing...');
+      
       // Inisialisasi Model
       const storyModel = new StoryModel(apiService);
       
@@ -9,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const addStoryView = new AddStoryView();
       const loginView = new LoginView();
       const registerView = new RegisterView();
+      
+      console.log('Views created');
       
       // Inisialisasi Presenter
       new HomePresenter({
@@ -21,29 +25,36 @@ document.addEventListener('DOMContentLoaded', () => {
         model: storyModel,
       });
       
+      console.log('Creating login presenter...');
       new LoginPresenter({
         view: loginView,
         apiService,
         router,
       });
       
+      console.log('Creating register presenter...');
       new RegisterPresenter({
         view: registerView,
         apiService,
         router,
       });
       
+      console.log('Presenters initialized');
+      
       // Konfigurasi Router
       router
         .addRoute('/', () => {
+          console.log('Rendering home page');
           homeView.render();
         }, { requiresAuth: true })
         
         .addRoute('/tambah', () => {
+          console.log('Rendering add story page');
           addStoryView.render();
         }, { requiresAuth: true })
         
         .addRoute('/peta', () => {
+          console.log('Rendering map page');
           // Tampilkan peta lokasi
           document.querySelector('#mainContent').innerHTML = `
             <section class="map-section">
@@ -78,17 +89,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { requiresAuth: true })
         
         .addRoute('/masuk', () => {
+          console.log('Rendering login page');
           loginView.render();
+
+          // Debug untuk memeriksa apakah form terdaftar dengan benar
+          setTimeout(() => {
+            const form = document.querySelector('#loginForm');
+            if (form) {
+              console.log('Login form found');
+              // Cek event listener
+              const listeners = getEventListeners(form);
+              console.log('Login form event listeners:', listeners);
+            } else {
+              console.error('Login form not found after render!');
+            }
+          }, 300);
         }, { guestOnly: true })
         
         .addRoute('/daftar', () => {
+          console.log('Rendering register page');
           registerView.render();
+
+          // Debug untuk memeriksa apakah form terdaftar dengan benar
+          setTimeout(() => {
+            const form = document.querySelector('#registerForm');
+            if (form) {
+              console.log('Register form found');
+            } else {
+              console.error('Register form not found after render!');
+            }
+          }, 300);
         }, { guestOnly: true })
         
         .setFallback(() => {
           console.error('Halaman tidak ditemukan');
           router.navigateTo('/');
         });
+      
+      console.log('Routes configured');
       
       // Inisialisasi router
       router.init();
@@ -98,6 +136,8 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Setup navigation toggle
       this._setupNavigation();
+      
+      console.log('App initialization complete');
     },
     
     _setupSkipLink() {
@@ -131,27 +171,34 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Handle auth status changes
       document.addEventListener('authChanged', () => {
+        console.log('Auth status changed');
         this._updateAuthNavItem();
       });
     },
     
     _updateAuthNavItem() {
       const authNavItem = document.getElementById('authNavItem');
-      const authNavText = document.getElementById('authNavText');
       
       if (authNavItem) {
         const isLoggedIn = localStorage.getItem('token') !== null;
+        console.log('Updating auth nav item, isLoggedIn:', isLoggedIn);
         
         if (isLoggedIn) {
           authNavItem.innerHTML = `<a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Keluar</a>`;
           
           // Add logout functionality
-          document.getElementById('logoutBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('token');
-            router.navigateTo('/masuk');
-            document.dispatchEvent(new Event('authChanged'));
-          });
+          const logoutBtn = document.getElementById('logoutBtn');
+          if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              console.log('Logout clicked');
+              localStorage.removeItem('token');
+              localStorage.removeItem('userId');
+              localStorage.removeItem('name');
+              router.navigateTo('/masuk');
+              document.dispatchEvent(new Event('authChanged'));
+            });
+          }
         } else {
           authNavItem.innerHTML = `<a href="#/masuk"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> Masuk</a>`;
         }
@@ -159,5 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
   
+  console.log('Starting app...');
   app.init();
 });

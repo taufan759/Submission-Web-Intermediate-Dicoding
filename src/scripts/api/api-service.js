@@ -5,6 +5,7 @@ class ApiService {
 
   async register(name, email, password) {
     try {
+      console.log('Registering user:', name, email);
       const response = await fetch(`${this.baseUrl}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -12,16 +13,20 @@ class ApiService {
       });
 
       const responseJson = await response.json();
+      console.log('Register response:', responseJson);
+      
       if (responseJson.error) throw new Error(responseJson.message);
 
       return responseJson;
     } catch (error) {
+      console.error('Registration error:', error);
       throw new Error(`Failed to register: ${error.message}`);
     }
   }
 
   async login(email, password) {
     try {
+      console.log('Login attempt for:', email);
       const response = await fetch(`${this.baseUrl}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -29,11 +34,18 @@ class ApiService {
       });
 
       const responseJson = await response.json();
+      console.log('Login response:', responseJson);
+      
       if (responseJson.error) throw new Error(responseJson.message);
 
+      // Simpan token dengan benar
       localStorage.setItem('token', responseJson.loginResult.token);
+      // Simpan juga data user untuk referensi
+      localStorage.setItem('user', JSON.stringify(responseJson.loginResult));
+      
       return responseJson;
     } catch (error) {
+      console.error('Login error:', error);
       throw new Error(`Failed to login: ${error.message}`);
     }
   }
@@ -41,6 +53,8 @@ class ApiService {
   async getAllStories() {
     try {
       const token = localStorage.getItem('token');
+      console.log('Getting stories with token:', token ? 'Token exists' : 'No token');
+      
       if (!token) throw new Error('Token tidak ditemukan. Silakan login terlebih dahulu.');
 
       const response = await fetch(`${this.baseUrl}/stories?location=1`, {
@@ -48,11 +62,17 @@ class ApiService {
       });
 
       const responseJson = await response.json();
+      console.log('Stories response:', responseJson);
+      
       if (responseJson.error) throw new Error(responseJson.message);
 
       return responseJson.listStory;
     } catch (error) {
       console.error('Error fetching stories:', error);
+      if (error.message.includes('Token tidak ditemukan')) {
+        // Redirect to login if token is missing
+        router.navigateTo('/masuk');
+      }
       return [];
     }
   }
@@ -60,6 +80,8 @@ class ApiService {
   async addNewStory(description, photoBlob, lat, lon) {
     try {
       const token = localStorage.getItem('token');
+      console.log('Adding new story with token:', token ? 'Token exists' : 'No token');
+      
       if (!token) throw new Error('Token tidak ditemukan. Silakan login terlebih dahulu.');
 
       const formData = new FormData();
@@ -77,54 +99,14 @@ class ApiService {
       });
 
       const responseJson = await response.json();
+      console.log('Add story response:', responseJson);
+      
       if (responseJson.error) throw new Error(responseJson.message);
 
       return responseJson;
     } catch (error) {
+      console.error('Error adding story:', error);
       throw new Error(`Failed to add story: ${error.message}`);
-    }
-  }
-
-  
-  async _guestLogin() {
-    try {
-      const response = await fetch(`${this.baseUrl}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: 'key@gemoy.com',
-          password: 'password123',
-        }),
-      });
-
-      const responseJson = await response.json();
-      if (!responseJson.error) {
-        localStorage.setItem('token', responseJson.loginResult.token);
-      } else {
-        await this._registerGuestAccount();
-      }
-    } catch (error) {
-      console.error('Guest login failed:', error);
-      await this._registerGuestAccount();
-    }
-  }
-
-  async _registerGuestAccount() {
-    try {
-      const response = await fetch(`${this.baseUrl}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: 'key',
-          email: 'key@gemoy.com',
-          password: 'password123',
-        }),
-      });
-
-      const responseJson = await response.json();
-      if (!responseJson.error) await this._guestLogin();
-    } catch (error) {
-      console.error('Guest registration failed:', error);
     }
   }
 }

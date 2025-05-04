@@ -89,32 +89,53 @@ class RegisterView {
 
     _initListeners() {
         const registerForm = document.querySelector('#registerForm');
-        registerForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-
-            const name = document.querySelector('#name').value;
-            const email = document.querySelector('#email').value;
-            const password = document.querySelector('#password').value;
-
-            this.showLoading(true);
-
-            try {
-                if (this.onRegisterSubmit) {
-                    await this.onRegisterSubmit(name, email, password);
-                }
-            } catch (error) {
-                this.showAlert(error.message);
-                this.showLoading(false);
-            }
-        });
-
-        const loginLink = document.querySelector('a[href="#/masuk"]');
-        if (loginLink) {
-            loginLink.addEventListener('click', (event) => {
+        if (registerForm) {  // Tambahkan pemeriksaan
+            registerForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
-                router.navigateTo('/masuk');
+    
+                const name = document.querySelector('#name').value;
+                const email = document.querySelector('#email').value;
+                const password = document.querySelector('#password').value;
+    
+                if (!name || !email || !password) {
+                    this.showAlert('Semua field wajib diisi!');
+                    return;
+                }
+    
+                if (password.length < 6) {
+                    this.showAlert('Password minimal 6 karakter!');
+                    return;
+                }
+    
+                this.showLoading(true);
+    
+                try {
+                    if (this.onRegisterSubmit) {
+                        await this.onRegisterSubmit(name, email, password);
+                    } else {
+                        console.error('Register handler belum terdaftar');
+                        this.showAlert('Terjadi kesalahan sistem');
+                        this.showLoading(false);
+                    }
+                } catch (error) {
+                    this.showAlert(error.message || 'Terjadi kesalahan saat register');
+                    this.showLoading(false);
+                }
             });
+        } else {
+            console.error('Register form tidak ditemukan');
         }
+    
+        // Pastikan fungsi setelah render selesai
+        setTimeout(() => {
+            const loginLink = document.querySelector('a[href="#/masuk"]');
+            if (loginLink) {
+                loginLink.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    router.navigateTo('/masuk');
+                });
+            }
+        }, 100);
     }
 
     showLoading(isLoading) {

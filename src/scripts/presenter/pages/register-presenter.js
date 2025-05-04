@@ -1,38 +1,46 @@
-class RegisterPresenter {
+class LoginPresenter {
     constructor({ view, apiService, router }) {
         this.view = view;
         this.apiService = apiService;
         this.router = router || window.router;
         
-        this.view.setRegisterSubmitHandler(this.onRegisterSubmit.bind(this));
+        // Pastikan handler untuk login terdaftar
+        this.view.setLoginSubmitHandler(this.onLoginSubmit.bind(this));
     }
     
     init() {
-        // Metode init kosong untuk konsistensi dengan presenter lain
+        // Metode ini mungkin dipanggil dari tempat lain
+        console.log('LoginPresenter initialized');
     }
 
-    async onRegisterSubmit(name, email, password) {
+    async onLoginSubmit(email, password) {
         try {
+            console.log('Login submit handler called');
             this.view.showLoading(true);
             
-            await this.apiService.register(name, email, password);
+            // Beri delay kecil untuk UX
+            await new Promise(resolve => setTimeout(resolve, 500));
             
-            await this.apiService.login(email, password);
+            const result = await this.apiService.login(email, password);
+            console.log('Login success:', result);
 
+            // Memicu event autentikasi berubah
             document.dispatchEvent(new Event('authChanged'));
 
-            this.view.showSuccess('✅ Berhasil mendaftar');
-            
+            // Tampilkan pesan sukses
+            this.view.showSuccess('✅ Berhasil login!');
+
+            // Arahkan ke halaman utama setelah delay
             setTimeout(() => {
                 this.router.navigateTo('/');
-            }, 1000);
-            
+            }, 1000); 
+
             return true;
         } catch (error) {
-            this.view.showAlert(error.message);
-            throw error;
-        } finally {
+            console.error('Login error in presenter:', error);
+            this.view.showAlert(error.message || 'Terjadi kesalahan saat login');
             this.view.showLoading(false);
+            throw error;
         }
     }
 }

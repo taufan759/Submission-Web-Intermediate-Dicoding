@@ -3,6 +3,7 @@ class Router {
     this.routes = [];
     this.currentUrl = '';
     
+    // Periksa perubahan hash dengan listener yang tepat
     window.addEventListener('hashchange', this._handleRouteChange.bind(this));
   }
 
@@ -24,13 +25,7 @@ class Router {
 
   _handleRouteChange() {
     console.log('Hash berubah ke:', window.location.hash); 
-    if (document.startViewTransition) {
-      document.startViewTransition(() => {
-        this._loadRoute();
-      });
-    } else {
-      this._loadRoute();
-    }
+    this._loadRoute();
   }
 
   _loadRoute() {
@@ -40,7 +35,7 @@ class Router {
     
     const isAuthenticated = localStorage.getItem('token') !== null;
     
-    console.log('Current URL:', url); 
+    console.log('Loading route:', url, 'Auth:', isAuthenticated); 
 
     const route = this.routes.find((route) => {
       return route.url === url;
@@ -61,17 +56,19 @@ class Router {
       
       route.callback();
     } else if (this.fallbackCallback) {
+      console.log('Route tidak ditemukan, menggunakan fallback');
       this.fallbackCallback();
     }
   }
 
   navigateTo(url) {
-    console.log('Mengarahkan ke:', url); 
+    console.log('Navigating to:', url); 
     window.location.hash = url;
   }
 
   init() {
-    this._handleRouteChange();
+    // Jalankan _loadRoute saat inisialisasi
+    this._loadRoute();
   }
 }
 
