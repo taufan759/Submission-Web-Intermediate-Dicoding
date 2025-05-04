@@ -1,0 +1,215 @@
+.add-story-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: var(--white-color);
+  padding: 30px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.add-story-container:hover {
+  
+  box-shadow: 0 12px 24px rgba(6, 90, 180, 0.805);
+}
+
+.add-story-container h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--primary-color);
+}
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    font-family: inherit;
+    font-size: 16px;
+  }
+  
+  .form-group textarea {
+    height: 150px;
+    resize: vertical;
+  }
+  
+ 
+  .camera-section {
+    margin-bottom: 30px;
+  }
+  
+  .camera-preview {
+    width: 100%;
+    height: 300px;
+    background-color: #f0f0f0;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 15px;
+  }
+  
+  #cameraFeed {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  #capturedImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+  }
+  
+  .camera-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  
+  .camera-controls button {
+    flex: 1;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .camera-controls button i {
+    margin-right: 5px;
+  }
+  
+  
+  .location-section {
+    margin-bottom: 30px;
+  }
+  
+  #pickLocationMap {
+    width: 100%;
+    height: 300px;
+    border-radius: var(--border-radius);
+    margin-bottom: 15px;
+  }
+  
+  .location-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+  }
+  
+  .location-info p {
+    padding: 8px;
+    background-color: #f0f0f0;
+    border-radius: var(--border-radius);
+    flex: 1;
+    margin: 0 5px;
+    text-align: center;
+  }
+  
+  
+  .submit-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .submit-btn:hover {
+    background-color: #0866d1be;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px #0866d1be;
+  }
+  
+  .submit-btn:active {
+    transform: scale(0.96);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+ 
+  
+  .loading-indicator {
+    display: none;
+    text-align: center;
+    margin: 20px 0;
+  }
+  
+  .loading-indicator i {
+    font-size: 2rem;
+    color: var(--secondary-color);
+    animation: spin 1s infinite linear;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  
+  .message {
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .success {
+    background-color: rgba(39, 174, 96, 0.2);
+    border: 1px solid var(--success-color);
+    color: var(--success-color);
+  }
+  
+  .error {
+    background-color: rgba(231, 76, 60, 0.2);
+    border: 1px solid var(--danger-color);
+    color: var(--danger-color);
+  }
+  
+  
+  @media screen and (max-width: 768px) {
+    .add-story-container {
+      padding: 20px;
+    }
+    
+    .camera-preview {
+      height: 250px;
+    }
+    
+    #pickLocationMap {
+      height: 250px;
+    }
+    
+    .location-info {
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .location-info p {
+      margin: 0;
+    }
+  }
+
+
+
+
+  
+
+
+ 

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Peta Bicara, Cerita Bermakna</title>
+  <meta name="description" content="Aplikasi berbagi cerita sederhana dengan fitur peta">
+
+  <link rel="stylesheet" href="src/scripts/styles/main.css">
+  <link rel="stylesheet" href="src/scripts/styles/home.css">
+  <link rel="stylesheet" href="src/scripts/styles/add-story.css">
+  <link rel="stylesheet" href="src/scripts/styles/components.css">
+  <link rel="stylesheet" href="src/scripts/styles/auth.css">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+</head>
+<body>
+  <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
+  
+  <header class="header">
+    <div class="container">
+      
+      <h1>
+        <a href="#/" class="brand-logo">
+          <i class="fas fa-book-open" aria-hidden="true"></i>
+          <span class="brand-text-first">Cerita</span><span class="brand-text-last">ku</span>
+        </a>
+      </h1>
+      
+      <nav id="navigation" aria-label="Navigasi Utama">
+        
+        <ul>
+          <li><a href="#/">Beranda</a></li>
+          <li><a href="#/add-story">Tambah Cerita</a></li>
+          <li id="authNavItem"><a href="#/login">Login</a></li>
+        
+        </ul>
+      </nav>
+      <button id="hamburgerButton" aria-label="Toggle Menu">
+        <i class="fa fa-bars"></i>
+      </button>
+    </div>
+  </header>
+
+  <main id="mainContent" tabindex="-1">
+    
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 Ceritaku</p>
+    </div>
+  </footer>
+
+  <!-- Leaflet JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+  <!-- Application Scripts -->
+  <script src="src/scripts/utils/router.js"></script>
+  <script src="src/scripts/utils/camera-helper.js"></script>
+  <script src="src/scripts/api/api-service.js"></script>
+  <script src="src/scripts/model/story-model.js"></script>
+  <script src="src/scripts/view/components/story-card.js"></script>
+  <script src="src/scripts/view/components/navbar.js"></script>
+  <script src="src/scripts/view/components/footer.js"></script>
+  <script src="src/scripts/view/pages/home-view.js"></script>
+  <script src="src/scripts/view/pages/add-story-view.js"></script>
+  <script src="src/scripts/view/pages/login-view.js"></script>
+  <script src="src/scripts/view/pages/register-view.js"></script>
+  <script src="src/scripts/view/app-view.js"></script>
+  <script src="src/scripts/presenter/pages/home-presenter.js"></script>
+  <script src="src/scripts/presenter/pages/add-story-presenter.js"></script>
+  <script src="src/scripts/presenter/pages/login-presenter.js"></script>
+  <script src="src/scripts/presenter/pages/register-presenter.js"></script>
+  <script src="src/scripts/presenter/app-presenter.js"></script>
+  <script src="src/scripts/app.js"></script>
+
+</body>
+</html>

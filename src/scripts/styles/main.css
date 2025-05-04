@@ -1,0 +1,263 @@
+:root {
+  --primary-color: #1e3a8a;
+  --secondary-color: #1e3a8a;
+  --accent-color: #5ab7e9;
+  --text-color: #333;
+  --background-color: #f8f9fa;
+  --white-color: #ffffff;
+  --success-color: #27ae60;
+  --danger-color: #e74c3c;
+  --shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --border-radius: 8px;
+  --transition: all 0.3s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+a {
+  color: var(--secondary-color);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+a:hover {
+  color: var(--accent-color);
+}
+
+button {
+  cursor: pointer;
+  background-color: var(--secondary-color);
+  color: var(--white-color);
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+button:hover {
+  background-color: var(--accent-color);
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  font-family: inherit;
+  font-size: 16px;
+}
+
+
+.input-error {
+  border: 2px solid #e74c3c !important;
+  background-color: #fff6f6;
+}
+
+.img-error {
+  outline: 2px solid #e74c3c;
+}
+
+.text-error {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.field-error {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #e74c3c;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.field-error::before {
+  content: "⚠️";
+  font-style: normal;
+}
+
+
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+
+.header {
+  background-color: #1e3a8a;
+  color: var(--white-color);
+  padding: 20px 0;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.header .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  font-size: 24px;
+}
+
+.header h1 a {
+  color: var(--white-color);
+}
+
+.header nav ul {
+  display: flex;
+  list-style: none;
+}
+
+.header nav ul li {
+  margin-left: 20px;
+}
+
+.header nav ul li a {
+  color: var(--white-color);
+  font-weight: 600;
+}
+
+.header nav ul li a:hover {
+  color: var(--accent-color);
+}
+
+#hamburgerButton {
+  display: none;
+  background: transparent;
+  font-size: 24px;
+  padding: 5px;
+}
+
+
+main {
+  min-height: calc(100vh - 120px);
+  padding: 40px 0;
+}
+
+
+footer {
+  background-color: var(--primary-color);
+  color: var(--white-color);
+  padding: 20px 0;
+  text-align: center;
+}
+
+footer .fa-heart {
+  color: var(--danger-color);
+}
+
+
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #0044cc;
+  color: white;
+  padding: 8px;
+  z-index: 9999;   /* revisi poin 2 */
+  text-decoration: none;
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+
+
+@media screen and (max-width: 768px) {
+  .header nav {
+    position: absolute;
+    top: 65px;
+    left: 0;
+    width: 100%;
+    background-color: var(--primary-color);
+    height: 0;
+    overflow: hidden;
+    transition: var(--transition);
+  }
+
+  .header nav.active {
+    height: auto;
+  }
+
+  .header nav ul {
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .header nav ul li {
+    margin: 10px 0;
+  }
+
+  #hamburgerButton {
+    display: block;
+  }
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fadeIn {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 999;
+}
+
+.view-transition-fade {
+  view-transition-name: fade;
+}
+
+
+.text-primary {
+  color: #8E1616; 
+}
+
+.text-secondary {
+  color: #000000; 
+}
