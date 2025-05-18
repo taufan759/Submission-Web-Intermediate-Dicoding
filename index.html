@@ -7,9 +7,10 @@
   <meta name="description" content="Berbagi cerita berdasarkan lokasi - Jelajahi dunia dari sudut pandang yang berbeda">
   <meta name="theme-color" content="#4299e1">
 
+  <base href="/Submission-Web-Intermediate-Dicoding/">
   <!-- PWA Manifest -->
-  <link rel="manifest" href="/manifest.json">
-  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 
   <!-- Preconnect to external resources -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -144,8 +145,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   
   <!-- Utils -->
-  <script src="src/scripts/utils/router.js"></script>
-  <script src="src/scripts/utils/camera-helper.js"></script>
+  <script type="module" src="src/scripts/utils/router.js"></script>
+  <script type="module" src="src/scripts/utils/camera-helper.js"></script>
   <script type="module" src="src/scripts/utils/sw-register.js"></script>
   <script type="module" src="src/scripts/utils/idb-helper.js"></script>
   <script type="module" src="src/scripts/utils/network-status.js"></script>
@@ -157,30 +158,30 @@
   <script type="module" src="src/scripts/model/story-model.js"></script>
   
   <!-- Components -->
-  <script src="src/scripts/view/components/footer.js"></script>
-  <script src="src/scripts/view/components/navbar.js"></script>
-  <script src="src/scripts/view/components/story-card.js"></script>
+  <script type="module" src="src/scripts/view/components/footer.js"></script>
+  <script type="module" src="src/scripts/view/components/navbar.js"></script>
+  <script type="module" src="src/scripts/view/components/story-card.js"></script>
   <script type="module" src="src/scripts/view/components/offline-indicator.js"></script>
   
   <!-- Views -->
-  <script src="src/scripts/view/pages/add-story-view.js"></script>
-  <script src="src/scripts/view/pages/home-view.js"></script>
-  <script src="src/scripts/view/pages/login-view.js"></script>
-  <script src="src/scripts/view/pages/register-view.js"></script>
-  <script src="src/scripts/view/pages/map-view.js"></script>
+  <script type="module" src="src/scripts/view/pages/add-story-view.js"></script>
+  <script type="module" src="src/scripts/view/pages/home-view.js"></script>
+  <script type="module" src="src/scripts/view/pages/login-view.js"></script>
+  <script type="module" src="src/scripts/view/pages/register-view.js"></script>
+  <script type="module" src="src/scripts/view/pages/map-view.js"></script>
   <script type="module" src="src/scripts/view/pages/not-found-view.js"></script>
-  <script src="src/scripts/view/app-view.js"></script>
+  <script type="module" src="src/scripts/view/app-view.js"></script>
   
   <!-- Presenters -->
-  <script src="src/scripts/presenter/pages/home-presenter.js"></script>
-  <script src="src/scripts/presenter/pages/add-story-presenter.js"></script>
-  <script src="src/scripts/presenter/pages/login-presenter.js"></script>
-  <script src="src/scripts/presenter/pages/register-presenter.js"></script>
-  <script src="src/scripts/presenter/pages/map-presenter.js"></script>
-  <script src="src/scripts/presenter/app-presenter.js"></script>
+  <script type="module" src="src/scripts/presenter/pages/home-presenter.js"></script>
+  <script type="module" src="src/scripts/presenter/pages/add-story-presenter.js"></script>
+  <script type="module" src="src/scripts/presenter/pages/login-presenter.js"></script>
+  <script type="module" src="src/scripts/presenter/pages/register-presenter.js"></script>
+  <script type="module" src="src/scripts/presenter/pages/map-presenter.js"></script>
+  <script type="module" src="src/scripts/presenter/app-presenter.js"></script>
   
   <!-- App Entry Point -->
-  <script type="module" src="/src/scripts/app.js"></script>
+  <script type="module" src="src/scripts/app.js"></script>
 
   <script>
     // Handle PWA installation

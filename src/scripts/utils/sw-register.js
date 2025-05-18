@@ -7,7 +7,7 @@ const swRegister = async () => {
 
   try {
     // Register the service worker
-    const registration = await navigator.serviceWorker.register('/sw.js');
+    const registration = await navigator.serviceWorker.register('/Submission-Web-Intermediate-Dicoding/sw.js');
     console.log('Service worker registered with scope:', registration.scope);
     
     // Send message to service worker to skip waiting if there's an update
