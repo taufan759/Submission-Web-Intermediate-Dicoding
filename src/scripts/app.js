@@ -1,12 +1,34 @@
+// app.js
+import swRegister from './utils/sw-register.js';
+import offlineIndicator from './view/components/offline-indicator.js';
+import DbHelper from './utils/idb-helper.js';
+import networkStatus from './utils/network-status.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   const app = {
     async init() {
       console.log('App initializing...');
       
-      // Inisialisasi Model
-      const storyModel = new StoryModel(apiService);
+      // Register service worker
+      await swRegister();
       
-      // Inisialisasi View
+      // Initialize the offline indicator (imported as singleton)
+      console.log('Offline indicator initialized');
+      
+      // Initialize IndexedDB
+      try {
+        await DbHelper.openDB();
+        console.log('IndexedDB initialized');
+      } catch (error) {
+        console.error('Failed to initialize IndexedDB:', error);
+      }
+      
+      // Create models
+      const storyModel = new StoryModel(apiService);
+      const authModel = apiService;
+      
+      // Create views
+      const appView = new AppView();
       const homeView = new HomeView();
       const addStoryView = new AddStoryView();
       const loginView = new LoginView();
@@ -14,7 +36,14 @@ document.addEventListener('DOMContentLoaded', () => {
       
       console.log('Views created');
       
-      // Inisialisasi Presenter
+      // Create app presenter
+      const appPresenter = new AppPresenter({
+        view: appView,
+        storyModel: storyModel,
+        authModel: authModel,
+        router: router // Use the existing global router 
+      });
+
       const homePresenter = new HomePresenter({
         view: homeView,
         model: storyModel,
@@ -41,28 +70,38 @@ document.addEventListener('DOMContentLoaded', () => {
       
       console.log('Presenters initialized');
       
-      // Konfigurasi Router
+      // Add global event listener to stop camera on page navigation
+      window.addEventListener('hashchange', () => {
+        console.log('Page navigation detected, checking if camera needs to be stopped');
+        
+        if (cameraHelper && cameraHelper.stream) {
+          console.log('Active camera stream detected during navigation, stopping it');
+          cameraHelper.stopCamera();
+        }
+      });
+      
+      // Configure router
       router
-      .addRoute('/', () => {
-        console.log('Navigating to home page');
-        document.querySelector('#mainContent').innerHTML = ''; // Clear previous content
-        
-        const homeView = new HomeView();
-        const homePresenter = new HomePresenter({
-          view: homeView,
-          model: storyModel
-        });
-        
-        homePresenter.init();
-        homeView.render();
-      }, { requiresAuth: true })
-        
+        .addRoute('/', () => {
+          console.log('Navigating to home page');
+          document.querySelector('#mainContent').innerHTML = ''; // Clear previous content
+          
+          const homeView = new HomeView();
+          const homePresenter = new HomePresenter({
+            view: homeView,
+            model: storyModel
+          });
+          
+          homePresenter.init();
+          homeView.render();
+        }, { requiresAuth: true })
+          
         .addRoute('/tambah', () => {
           console.log('Navigating to add story page');
           document.querySelector('#mainContent').innerHTML = ''; // Clear previous content
           
           const addStoryView = new AddStoryView();
-          addStoryView.renderPage();
+          addStoryView.render();
           
           const addStoryPresenter = new AddStoryPresenter({
             view: addStoryView,
@@ -71,65 +110,54 @@ document.addEventListener('DOMContentLoaded', () => {
           
           addStoryPresenter.init();
         }, { requiresAuth: true })
-        
+          
         .addRoute('/peta', () => {
-          console.log('Rendering map page');
-          // Clear existing content
+          console.log('Navigating to map page');
+          // Check and stop camera if active
+          if (cameraHelper && cameraHelper.stream) {
+            console.log('Active camera stream detected, stopping it');
+            cameraHelper.stopCamera();
+          }
+          
+          // Clear previous content
           document.querySelector('#mainContent').innerHTML = '';
           
-          // Tambahkan container untuk peta
-          document.querySelector('#mainContent').innerHTML = `
-  <section class="map-section" style="margin-top: 100px;">
-    <div class="container">
-      <h2 class="section-title">Peta Cerita</h2>
-      <div id="storyMap" style="height: 500px;"></div>
-    </div>
-  </section>
-          `;
+          // Create and render map view
+          const mapView = new MapView();
+          mapView.render();
           
-          // Inisialisasi peta
-          setTimeout(() => {
-            const map = L.map('storyMap').setView([-2.5489, 118.0149], 5);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-            
-            // Load stories with location
-            storyModel.getAllStories().then(stories => {
-              stories.filter(story => story.lat && story.lon).forEach(story => {
-                L.marker([story.lat, story.lon])
-                  .addTo(map)
-                  .bindPopup(`
-                    <h3>${story.name}</h3>
-                    <p>${story.description}</p>
-                    <img src="${story.photoUrl}" alt="${story.name}" style="width:100%;max-width:200px;">
-                  `);
-              });
-            });
-          }, 100);
+          // Create map presenter
+          const mapPresenter = new MapPresenter({
+            view: mapView,
+            model: storyModel
+          });
+          
+          mapPresenter.init();
         }, { requiresAuth: true })
-        
+          
         .addRoute('/masuk', () => {
           console.log('Rendering login page');
           document.querySelector('#mainContent').innerHTML = ''; // Clear content first
           loginView.render();
         }, { guestOnly: true })
-        
+          
         .addRoute('/daftar', () => {
           console.log('Rendering register page');
           document.querySelector('#mainContent').innerHTML = ''; // Clear content first
           registerView.render();
         }, { guestOnly: true })
-        
+          
         .setFallback(() => {
           console.error('Halaman tidak ditemukan');
-          router.navigateTo('/');
+          document.querySelector('#mainContent').innerHTML = '';
+          
+          // Render 404 page
+          const notFoundView = new NotFoundView();
+          notFoundView.render();
         });
       
       console.log('Routes configured');
       
-      // Inisialisasi router
       router.init();
       
       // Setup skip link
@@ -140,6 +168,19 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Add click handlers for navigation
       this._setupNavClicks();
+
+      appPresenter.start();
+      
+      // Add View Transition styles
+      this._addViewTransitionStyles();
+      
+      // Check and sync offline data if needed
+      if (networkStatus.isOnline()) {
+        console.log('Online at startup, checking for offline data to sync');
+        setTimeout(() => {
+          storyModel.syncOfflineStories();
+        }, 2000);
+      }
       
       console.log('App initialization complete');
     },
@@ -220,6 +261,42 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           authNavItem.innerHTML = `<a href="#/masuk"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> Masuk</a>`;
         }
+      }
+    },
+    
+    _addViewTransitionStyles() {
+      // Add transition styles if the browser supports the View Transition API
+      if (!document.getElementById('viewTransitionStyles')) {
+        const style = document.createElement('style');
+        style.id = 'viewTransitionStyles';
+        style.textContent = `
+          /* Basic transitions for all browsers */
+          #mainContent {
+            transition: opacity 0.3s ease;
+          }
+          
+          /* View Transitions API specific styles */
+          @supports (view-transition: same) {
+            ::view-transition-old(root) {
+              animation: 300ms cubic-bezier(0.4, 0, 0.2, 1) both fade-out;
+            }
+            
+            ::view-transition-new(root) {
+              animation: 300ms cubic-bezier(0.4, 0, 0.2, 1) both fade-in;
+            }
+            
+            @keyframes fade-in {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            
+            @keyframes fade-out {
+              from { opacity: 1; }
+              to { opacity: 0; }
+            }
+          }
+        `;
+        document.head.appendChild(style);
       }
     }
   };

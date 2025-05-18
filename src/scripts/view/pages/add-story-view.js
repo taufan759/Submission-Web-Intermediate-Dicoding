@@ -1,3 +1,6 @@
+// src/scripts/view/pages/add-story-view.js (Updated)
+import networkStatus from '../../utils/network-status.js';
+
 class AddStoryView {
   constructor() {
     this._container = document.querySelector("#mainContent");
@@ -9,15 +12,60 @@ class AddStoryView {
     };
     this._cameraActive = false;
     this._canvas = document.createElement("canvas");
-    this._submitCallback = null;
+    this._presenter = null;
+    
+    // Add event listener for page navigation to ensure camera cleanup
+    this._setupNavigationListener();
   }
 
-  renderPage() {
+  setPresenter(presenter) {
+    this._presenter = presenter;
+  }
+  
+  _setupNavigationListener() {
+    // Listen for hashchange to stop camera when navigating away
+    window.addEventListener('hashchange', () => {
+      if (this._cameraActive) {
+        console.log('Navigation detected, stopping camera');
+        this._stopCameraAndCleanup();
+      }
+    });
+    
+    // Listen for beforeunload to stop camera when page is closed/refreshed
+    window.addEventListener('beforeunload', () => {
+      if (this._cameraActive) {
+        console.log('Page unload detected, stopping camera');
+        this._stopCameraAndCleanup();
+      }
+    });
+  }
+  
+  _stopCameraAndCleanup() {
+    console.log('Stopping camera and cleaning up resources');
+    cameraHelper.stopCamera();
+    this._cameraActive = false;
+    
+    // Clear video element if it exists
+    const cameraFeed = document.getElementById("cameraFeed");
+    if (cameraFeed) {
+      cameraFeed.srcObject = null;
+    }
+  }
+
+  render() {
     console.log('Rendering add story page');
     this._container.innerHTML = `
       <div class="container">
         <div class="add-story-container">
           <h2><span class="text-primary">Tambah</span> <span class="text-secondary">Cerita Baru</span></h2>
+          
+          <div class="connection-status">
+            <span id="connectionIndicator" class="${networkStatus.isOnline() ? 'online' : 'offline'}">
+              <i class="fas ${networkStatus.isOnline() ? 'fa-wifi' : 'fa-wifi-slash'}" aria-hidden="true"></i>
+              ${networkStatus.isOnline() ? 'Online' : 'Offline Mode'}
+            </span>
+          </div>
+          
           <form id="addStoryForm">
             <div id="messageContainer"></div>
             
@@ -55,9 +103,15 @@ class AddStoryView {
               <p class="hint">Klik pada peta untuk menentukan lokasi cerita Anda.</p>
             </div>
             
+            <div class="offline-notice ${networkStatus.isOnline() ? 'hidden' : ''}">
+              <i class="fas fa-info-circle" aria-hidden="true"></i>
+              <p>Anda sedang dalam mode offline. Cerita akan disimpan di perangkat dan diunggah secara otomatis saat terhubung kembali ke internet.</p>
+            </div>
+            
             <div class="submit-section">
               <button type="submit" id="submitBtn" class="submit-btn">
-                <i class="fas fa-paper-plane" aria-hidden="true"></i> Kirim Cerita
+                <i class="fas fa-paper-plane" aria-hidden="true"></i> 
+                ${networkStatus.isOnline() ? 'Kirim Cerita' : 'Simpan Draft'}
               </button>
             </div>
           </form>
@@ -70,6 +124,9 @@ class AddStoryView {
       </div>
     `;
 
+    // Add network status listener to update UI
+    networkStatus.addListener(this._updateConnectionStatus.bind(this));
+
     // Initialize components after rendering
     setTimeout(() => {
       this._initMap();
@@ -77,6 +134,33 @@ class AddStoryView {
       this._initFormSubmit();
       console.log('Add story page components initialized');
     }, 100);
+  }
+
+  _updateConnectionStatus(isOnline) {
+    // Update connection indicator
+    const connectionIndicator = document.getElementById('connectionIndicator');
+    if (connectionIndicator) {
+      connectionIndicator.className = isOnline ? 'online' : 'offline';
+      connectionIndicator.innerHTML = `
+        <i class="fas ${isOnline ? 'fa-wifi' : 'fa-wifi-slash'}" aria-hidden="true"></i>
+        ${isOnline ? 'Online' : 'Offline Mode'}
+      `;
+    }
+    
+    // Update submit button text
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) {
+      submitBtn.innerHTML = `
+        <i class="fas fa-paper-plane" aria-hidden="true"></i> 
+        ${isOnline ? 'Kirim Cerita' : 'Simpan Draft'}
+      `;
+    }
+    
+    // Show/hide offline notice
+    const offlineNotice = document.querySelector('.offline-notice');
+    if (offlineNotice) {
+      offlineNotice.classList.toggle('hidden', isOnline);
+    }
   }
 
   _initMap() {
@@ -153,7 +237,7 @@ class AddStoryView {
           console.error('Failed to start camera');
           startCameraBtn.disabled = false;
           cameraFeed.style.display = "none";
-          this._showMessage("Gagal memulai kamera. Pastikan kamera diizinkan.", "error");
+          this.showMessage("Gagal memulai kamera. Pastikan kamera diizinkan.", "error");
         }
       }
     });
@@ -172,7 +256,7 @@ class AddStoryView {
           this._cameraActive = false;
         } else {
           console.error('Failed to capture image');
-          this._showMessage("Gagal mengambil gambar. Coba lagi.", "error");
+          this.showMessage("Gagal mengambil gambar. Coba lagi.", "error");
         }
       }
     });
@@ -192,7 +276,7 @@ class AddStoryView {
         console.error('Failed to restart camera');
         startCameraBtn.disabled = false;
         cameraFeed.style.display = "none";
-        this._showMessage("Gagal memulai kamera. Pastikan kamera diizinkan.", "error");
+        this.showMessage("Gagal memulai kamera. Pastikan kamera diizinkan.", "error");
       }
     });
   }
@@ -212,58 +296,72 @@ class AddStoryView {
 
       const description = document.getElementById("description").value.trim();
       const capturedImage = document.getElementById("capturedImage");
-      let hasError = false;
-
-      // Validate description
-      if (!description) {
-        this._showMessage("Cerita tidak boleh kosong.", "error");
-        hasError = true;
-      }
-
-      // Validate image
-      if (!capturedImage.src || capturedImage.src === 'about:blank' || capturedImage.style.display === 'none') {
-        this._showMessage("Gambar Anda belum diambil!", "error");
-        hasError = true;
-      }
-
-      // Validate location
-      const { lat, lon } = this._position;
-      if (lat === null || lon === null) {
-        this._showMessage("Pilih lokasi pada peta!", "error");
-        hasError = true;
-      }
-
-      if (hasError) return;
-
-      this.showLoading();
-
-      try {
-        console.log('Preparing to submit story');
-        // Use cameraHelper to get the blob
-        const photoBlob = await cameraHelper.getCapturedImageBlob();
-        
-        if (this._submitCallback) {
-          console.log('Calling submit callback');
-          await this._submitCallback(description, photoBlob, lat, lon);
-        } else {
-          console.error('Submit callback not set');
-          this._showMessage('Terjadi kesalahan: handler belum terdaftar', 'error');
-          this.hideLoading();
-        }
-      } catch (error) {
-        console.error('Error in form submission:', error);
-        this._showMessage(`Error: ${error.message}`, "error");
-        this.hideLoading();
+      
+      // Get form data
+      const formData = {
+        description,
+        hasImage: capturedImage.src && capturedImage.src !== 'about:blank' && capturedImage.style.display !== 'none',
+        position: { ...this._position }
+      };
+      
+      // Let the presenter handle form submission
+      if (this._presenter) {
+        this._presenter.submitStory(formData);
+      } else {
+        console.error('Presenter not set');
+        this.showMessage('Terjadi kesalahan: presenter belum terdaftar', 'error');
       }
     });
   }
 
-  setSubmitCallback(callback) {
-    console.log('Setting submit callback');
-    this._submitCallback = callback;
+  // Validation method that can be called by the presenter
+  validateForm() {
+    const description = document.getElementById("description").value.trim();
+    const capturedImage = document.getElementById("capturedImage");
+    const { lat, lon } = this._position;
+    let hasError = false;
+    let errorMessage = '';
+
+    // Validate description
+    if (!description) {
+      errorMessage = "Cerita tidak boleh kosong.";
+      hasError = true;
+    }
+
+    // Validate image
+    else if (!capturedImage.src || capturedImage.src === 'about:blank' || capturedImage.style.display === 'none') {
+      errorMessage = "Gambar Anda belum diambil!";
+      hasError = true;
+    }
+
+    // Validate location
+    else if (lat === null || lon === null) {
+      errorMessage = "Pilih lokasi pada peta!";
+      hasError = true;
+    }
+
+    if (hasError) {
+      this.showMessage(errorMessage, "error");
+      return false;
+    }
+    
+    return true;
+  }
+  
+  async getStoryData() {
+    // Get the description
+    const description = document.getElementById("description").value.trim();
+    
+    // Get the photo blob from camera helper
+    const photoBlob = await cameraHelper.getCapturedImageBlob();
+    
+    // Get the position
+    const { lat, lon } = this._position;
+    
+    return { description, photoBlob, lat, lon };
   }
 
-  _showMessage(message, type = "success") {
+  showMessage(message, type = "success") {
     console.log(`Showing ${type} message:`, message);
     const messageContainer = document.getElementById("messageContainer");
     if (messageContainer) {
@@ -290,8 +388,12 @@ class AddStoryView {
   }
 
   showSuccess(message) {
-    this._showMessage(message, "success");
-    // Reset form
+    this.showMessage(message, "success");
+    this.resetForm();
+  }
+  
+  resetForm() {
+    // Reset form fields
     const descriptionField = document.getElementById("description");
     const capturedImage = document.getElementById("capturedImage");
     
@@ -312,6 +414,8 @@ class AddStoryView {
 
     // Reset position
     this._position = { lat: null, lon: null };
+    
+    // Update UI
     const latValueEl = document.getElementById("latValue");
     const lonValueEl = document.getElementById("lonValue");
     
@@ -319,19 +423,26 @@ class AddStoryView {
       latValueEl.textContent = "Belum dipilih";
       lonValueEl.textContent = "Belum dipilih";
     }
+    
+    // Ensure camera is stopped
+    if (this._cameraActive) {
+      this._stopCameraAndCleanup();
+    }
   }
 
   showError(message) {
-    this._showMessage(message, "error");
+    this.showMessage(message, "error");
   }
 
   destroy() {
     console.log('Destroying add story view');
+    
+    // Stop camera if active
     if (this._cameraActive) {
-      cameraHelper.stopCamera();
-      this._cameraActive = false;
+      this._stopCameraAndCleanup();
     }
 
+    // Clean up map if it exists
     if (this._map) {
       this._map.remove();
       this._map = null;

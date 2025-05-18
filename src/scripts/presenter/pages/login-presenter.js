@@ -5,42 +5,53 @@ class LoginPresenter {
         this.apiService = apiService;
         this.router = router || window.router;
         
-        console.log('Setting login submit handler');
-    this.view.setLoginSubmitHandler(this.onLoginSubmit.bind(this));
-    console.log('Login submit handler set');
-}
+        // Set this presenter as the view's presenter
+        this.view.setPresenter(this);
+    }
     
     init() {
-        // Tidak ada yang perlu dilakukan di sini karena handler sudah diatur di constructor
+        console.log('LoginPresenter initialized');
     }
 
     async onLoginSubmit(email, password) {
+        // Let the view validate the form first
+        if (!this.view.validateForm(email, password)) {
+            return false;
+        }
+        
         try {
             this.view.showLoading(true);
             
-            // Tambahkan logging untuk debugging
+            // Use API service to login the user
             console.log('Attempting login with:', email);
-            
             const result = await this.apiService.login(email, password);
             console.log('Login successful:', result);
 
-            // Dispatch event untuk memberitahu komponen lain tentang perubahan status login
+            // Dispatch event for other components to know about auth change
             document.dispatchEvent(new Event('authChanged'));
 
+            // Show success message in the view
             this.view.showSuccess('✅ Berhasil login');
 
-            // Beri waktu untuk menampilkan pesan sukses
+            // Navigate to home page after a short delay
             setTimeout(() => {
-                this.router.navigateTo('/');
+                this.navigateToHome();
             }, 1000); 
 
             return true;
         } catch (error) {
             console.error('Login error:', error);
-            this.view.showAlert(error.message);
-            return false;
-        } finally {
+            this.view.showAlert(error.message || 'Terjadi kesalahan saat login');
             this.view.showLoading(false);
+            return false;
         }
+    }
+
+    navigateToHome() {
+        this.router.navigateTo('/');
+    }
+
+    navigateToRegister() {
+        this.router.navigateTo('/daftar');
     }
 }

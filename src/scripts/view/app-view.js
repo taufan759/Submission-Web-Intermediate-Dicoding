@@ -1,94 +1,57 @@
 class AppView {
   constructor() {
     this.mainContent = document.getElementById('mainContent');
-    this._resetTransition = this._resetTransition.bind(this);
+    this.presenter = null;
+  }
+  
+  setPresenter(presenter) {
+    this.presenter = presenter;
   }
   
   renderHomePage() {
-    return this._renderView('home', () => {
-      const homeView = new HomeView();
-      homeView.render();
-      return homeView;
-    });
+    this.clearContent();
+    
+    const homeView = new HomeView();
+    homeView.render();
+    return homeView;
   }
   
   renderAddStoryPage() {
-    return this._renderView('add-story', () => {
-      const addStoryView = new AddStoryView();
-      addStoryView.render();
-      return addStoryView;
-    });
+    this.clearContent();
+    
+    const addStoryView = new AddStoryView();
+    addStoryView.render();
+    return addStoryView;
   }
   
   renderMapPage() {
-    return this._renderView('map', () => {
-      const mapView = new MapView();
-      mapView.render();
-      return mapView;
-    });
+    this.clearContent();
+    
+    // Create and render map view
+    const mapView = new MapView();
+    mapView.render();
+    return mapView;
   }
   
   renderLoginPage() {
-    return this._renderView('login', () => {
-      const loginView = new LoginView();
-      loginView.render();
-      return loginView;
-    });
+    this.clearContent();
+    
+    const loginView = new LoginView();
+    loginView.render();
+    return loginView;
   }
   
   renderRegisterPage() {
-    return this._renderView('register', () => {
-      const registerView = new RegisterView();
-      registerView.render();
-      return registerView;
-    });
+    this.clearContent();
+    
+    const registerView = new RegisterView();
+    registerView.render();
+    return registerView;
   }
   
-  _renderView(viewName, renderCallback) {
-    this._prepareViewTransition();
-    
-    // Clear previous content
+  clearContent() {
+    // Clear main content
     this.mainContent.innerHTML = '';
-    
-    // Create a container for the view
-    const viewContainer = document.createElement('div');
-    viewContainer.className = `${viewName}-container view-transition-element`;
-    viewContainer.setAttribute('role', 'region');
-    viewContainer.setAttribute('aria-label', `Halaman ${viewName}`);
-    
-    this.mainContent.appendChild(viewContainer);
-    
-    // Make the new view container the main content for the view
-    const originalMainContent = this.mainContent;
-    this.mainContent = viewContainer;
-    
-    // Execute the view's render method
-    const view = renderCallback();
-    
-    // Restore original main content reference
-    this.mainContent = originalMainContent;
-    
-    return view;
-  }
-  
-  _prepareViewTransition() {
-    // Add transition classes
-    if (document.startViewTransition) {
-      document.startViewTransition(() => {
-        this._applyTransitionCSS();
-      });
-    } else {
-      this._applyTransitionCSS();
-    }
-  }
-  
-  _applyTransitionCSS() {
-    this.mainContent.classList.add('view-transition');
-    this.mainContent.addEventListener('animationend', this._resetTransition, { once: true });
-  }
-  
-  _resetTransition() {
-    this.mainContent.classList.remove('view-transition');
   }
   
   showLoading() {
@@ -114,7 +77,70 @@ class AppView {
     `;
     
     document.getElementById('retryButton').addEventListener('click', () => {
-      window.location.reload();
+      if (this.presenter) {
+        this.presenter.reloadPage();
+      } else {
+        window.location.reload();
+      }
     });
+  }
+  
+  setupNavigation() {
+    const navToggle = document.getElementById('navToggle');
+    const navMenu = document.querySelector('.nav-menu');
+    
+    if (navToggle && navMenu) {
+      navToggle.addEventListener('click', () => {
+        const expanded = navToggle.getAttribute('aria-expanded') === 'true';
+        navToggle.setAttribute('aria-expanded', !expanded);
+        navMenu.classList.toggle('active');
+      });
+    }
+    
+    // Add click event listeners to all navigation links
+    document.querySelectorAll('.nav-menu a').forEach(link => {
+      link.addEventListener('click', () => {
+        if (navMenu && navMenu.classList.contains('active')) {
+          navMenu.classList.remove('active');
+          if (navToggle) {
+            navToggle.setAttribute('aria-expanded', 'false');
+          }
+        }
+      });
+    });
+  }
+  
+  updateAuthNavItem(isLoggedIn) {
+    const authNavItem = document.getElementById('authNavItem');
+    
+    if (authNavItem) {
+      if (isLoggedIn) {
+        authNavItem.innerHTML = `<a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Keluar</a>`;
+        
+        // Add logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+          e.preventDefault();
+          if (this.presenter) {
+            this.presenter.logout();
+          }
+        });
+      } else {
+        authNavItem.innerHTML = `<a href="#/masuk"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> Masuk</a>`;
+      }
+    }
+  }
+  
+  setupSkipLink() {
+    const mainContent = document.querySelector('#mainContent');
+    const skipLink = document.querySelector('.skip-link');
+    
+    if (mainContent && skipLink) {
+      skipLink.addEventListener('click', function (event) {
+        event.preventDefault();
+        skipLink.blur();
+        mainContent.focus();
+        mainContent.scrollIntoView();
+      });
+    }
   }
 }

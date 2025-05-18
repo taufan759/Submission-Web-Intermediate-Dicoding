@@ -1,0 +1,79 @@
+/* install-button.css */
+.install-prompt {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 12px 20px;
+  z-index: 1000;
+  width: 90%;
+  max-width: 400px;
+  animation: slide-up 0.3s ease-out;
+}
+
+.install-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.install-content p {
+  margin: 0;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.install-content p i {
+  font-size: 18px;
+  color: var(--color-primary, #4299e1);
+}
+
+.install-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.install-actions .btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.install-actions .btn-primary {
+  background-color: var(--color-primary, #4299e1);
+  color: white;
+}
+
+.install-actions .btn-outline {
+  background-color: transparent;
+  border: 1px solid #ddd;
+  color: #555;
+}
+
+.install-actions .btn-primary:hover {
+  background-color: #3182ce;
+}
+
+.install-actions .btn-outline:hover {
+  background-color: #f8f9fa;
+}
+
+@keyframes slide-up {
+  from {
+    transform: translate(-50%, 100%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}

@@ -26,8 +26,12 @@ const cameraHelper = {
   },
   
   stopCamera() {
+    console.log('Stopping camera stream');
     if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
+      this.stream.getTracks().forEach(track => {
+        track.stop();
+        console.log('Camera track stopped');
+      });
       this.stream = null;
     }
   },

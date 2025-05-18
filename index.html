@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Peta Bicara - Cerita Bermakna</title>
   <meta name="description" content="Berbagi cerita berdasarkan lokasi - Jelajahi dunia dari sudut pandang yang berbeda">
+  <meta name="theme-color" content="#4299e1">
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 
   <!-- Preconnect to external resources -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -17,6 +22,8 @@
   <link rel="stylesheet" href="src/scripts/styles/components.css">
   <link rel="stylesheet" href="src/scripts/styles/home.css">
   <link rel="stylesheet" href="src/scripts/styles/main.css">
+  <link rel="stylesheet" href="src/scripts/styles/view-transitions.css">
+  <link rel="stylesheet" href="src/scripts/styles/offline-status.css">
 
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
@@ -25,6 +32,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 </head>
 <body>
+  <!-- App Shell Structure -->
   <!-- Skip link for accessibility -->
   <a href="#mainContent" class="skip-link">Langsung ke konten utama</a>
   
@@ -52,7 +60,7 @@
     </div>
   </header>
 
-  <main id="mainContent" tabindex="-1">
+  <main id="mainContent" class="view-transition" tabindex="-1">
     <!-- Page content will be rendered here dynamically -->
     <div class="loading-container">
       <div class="loading-spinner"></div>
@@ -122,29 +130,45 @@
     </article>
   </template>
 
+  <div id="installPrompt" class="install-prompt" style="display: none;">
+    <div class="install-content">
+      <p><i class="fas fa-download" aria-hidden="true"></i> Instal PetaBicara di perangkat Anda</p>
+      <div class="install-actions">
+        <button id="installBtn" class="btn btn-primary">Instal</button>
+        <button id="dismissInstallBtn" class="btn btn-outline">Nanti</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Leaflet -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   
   <!-- Utils -->
   <script src="src/scripts/utils/router.js"></script>
   <script src="src/scripts/utils/camera-helper.js"></script>
+  <script type="module" src="src/scripts/utils/sw-register.js"></script>
+  <script type="module" src="src/scripts/utils/idb-helper.js"></script>
+  <script type="module" src="src/scripts/utils/network-status.js"></script>
   
   <!-- API -->
-  <script src="src/scripts/api/api-service.js"></script>
+  <script type="module" src="src/scripts/api/api-service.js"></script>
   
   <!-- Model -->
-  <script src="src/scripts/model/story-model.js"></script>
+  <script type="module" src="src/scripts/model/story-model.js"></script>
   
   <!-- Components -->
   <script src="src/scripts/view/components/footer.js"></script>
   <script src="src/scripts/view/components/navbar.js"></script>
   <script src="src/scripts/view/components/story-card.js"></script>
+  <script type="module" src="src/scripts/view/components/offline-indicator.js"></script>
   
   <!-- Views -->
   <script src="src/scripts/view/pages/add-story-view.js"></script>
   <script src="src/scripts/view/pages/home-view.js"></script>
   <script src="src/scripts/view/pages/login-view.js"></script>
   <script src="src/scripts/view/pages/register-view.js"></script>
+  <script src="src/scripts/view/pages/map-view.js"></script>
+  <script type="module" src="src/scripts/view/pages/not-found-view.js"></script>
   <script src="src/scripts/view/app-view.js"></script>
   
   <!-- Presenters -->
@@ -152,9 +176,48 @@
   <script src="src/scripts/presenter/pages/add-story-presenter.js"></script>
   <script src="src/scripts/presenter/pages/login-presenter.js"></script>
   <script src="src/scripts/presenter/pages/register-presenter.js"></script>
+  <script src="src/scripts/presenter/pages/map-presenter.js"></script>
   <script src="src/scripts/presenter/app-presenter.js"></script>
   
   <!-- App Entry Point -->
-  <script src="src/scripts/app.js"></script>
+  <script type="module" src="/src/scripts/app.js"></script>
+
+  <script>
+    // Handle PWA installation
+    let deferredPrompt;
+    const installPrompt = document.getElementById('installPrompt');
+    const installBtn = document.getElementById('installBtn');
+    const dismissInstallBtn = document.getElementById('dismissInstallBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent Chrome 67 and earlier from automatically showing the prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      deferredPrompt = e;
+      // Show the install prompt
+      installPrompt.style.display = 'block';
+    });
+
+    installBtn.addEventListener('click', () => {
+      // Hide the app provided install prompt
+      installPrompt.style.display = 'none';
+      // Show the browser install prompt
+      deferredPrompt.prompt();
+      // Wait for the user to respond to the prompt
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+        } else {
+          console.log('User dismissed the install prompt');
+        }
+        // Clear the saved prompt since it can't be used again
+        deferredPrompt = null;
+      });
+    });
+
+    dismissInstallBtn.addEventListener('click', () => {
+      installPrompt.style.display = 'none';
+    });
+  </script>
 </body>
 </html>

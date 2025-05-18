@@ -1,7 +1,11 @@
 class RegisterView {
     constructor() {
         this.container = document.querySelector('#mainContent');
-        this.onRegisterSubmit = null;
+        this.presenter = null;
+    }
+
+    setPresenter(presenter) {
+        this.presenter = presenter;
     }
 
     render() {
@@ -57,49 +61,53 @@ class RegisterView {
         `;
 
         if (!document.getElementById('loaderStyles')) {
-            const style = document.createElement('style');
-            style.id = 'loaderStyles';
-            style.textContent = `
-                .loader-container {
-                    display: none;
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                }
-                
-                .loader {
-                    border: 3px solid rgba(255, 255, 255, 0.3);
-                    border-top: 3px solid #ffffff;
-                    border-radius: 50%;
-                    width: 16px;
-                    height: 16px;
-                    animation: spin 1s linear infinite;
-                }
-                
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-                
-                .btn-loading .button-text {
-                    visibility: hidden;
-                }
-                
-                .btn-loading .loader-container {
-                    display: block;
-                }
-                
-                .btn-loading {
-                    position: relative;
-                    pointer-events: none;
-                    opacity: 0.8;
-                }
-            `;
-            document.head.appendChild(style);
+            this._addLoaderStyles();
         }
 
         this._initListeners();
+    }
+
+    _addLoaderStyles() {
+        const style = document.createElement('style');
+        style.id = 'loaderStyles';
+        style.textContent = `
+            .loader-container {
+                display: none;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+            
+            .loader {
+                border: 3px solid rgba(255, 255, 255, 0.3);
+                border-top: 3px solid #ffffff;
+                border-radius: 50%;
+                width: 16px;
+                height: 16px;
+                animation: spin 1s linear infinite;
+            }
+            
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            .btn-loading .button-text {
+                visibility: hidden;
+            }
+            
+            .btn-loading .loader-container {
+                display: block;
+            }
+            
+            .btn-loading {
+                position: relative;
+                pointer-events: none;
+                opacity: 0.8;
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     _initListeners() {
@@ -113,51 +121,50 @@ class RegisterView {
             newRegisterForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 console.log('Register form submitted');
-    
-                const name = document.querySelector('#name').value;
-                const email = document.querySelector('#email').value;
-                const password = document.querySelector('#password').value;
-    
-                if (!name || !email || !password) {
-                    this.showAlert('Semua field wajib diisi!');
-                    return;
-                }
-    
-                if (password.length < 6) {
-                    this.showAlert('Password minimal 6 karakter!');
-                    return;
-                }
-    
-                this.showLoading(true);
-    
-                try {
-                    if (this.onRegisterSubmit) {
-                        console.log('Calling onRegisterSubmit handler');
-                        await this.onRegisterSubmit(name, email, password);
-                    } else {
-                        console.error('Register handler belum terdaftar');
-                        this.showAlert('Terjadi kesalahan sistem');
-                        this.showLoading(false);
-                    }
-                } catch (error) {
-                    this.showAlert(error.message || 'Terjadi kesalahan saat register');
-                    this.showLoading(false);
+                
+                if (this.presenter) {
+                    // Get form values
+                    const name = document.querySelector('#name').value;
+                    const email = document.querySelector('#email').value;
+                    const password = document.querySelector('#password').value;
+                    
+                    // Let the presenter handle validation and submission
+                    this.presenter.onRegisterSubmit(name, email, password);
+                } else {
+                    console.error('Register presenter not set');
+                    this.showAlert('Terjadi kesalahan sistem');
                 }
             });
         } else {
             console.error('Register form tidak ditemukan');
         }
     
-        // Pastikan fungsi setelah render selesai
+        // Attach login link click event
         setTimeout(() => {
             const loginLink = document.querySelector('a[href="#/masuk"]');
             if (loginLink) {
                 loginLink.addEventListener('click', (event) => {
                     event.preventDefault();
-                    router.navigateTo('/masuk');
+                    if (this.presenter) {
+                        this.presenter.navigateToLogin();
+                    }
                 });
             }
         }, 100);
+    }
+
+    validateForm(name, email, password) {
+        if (!name || !email || !password) {
+            this.showAlert('Semua field wajib diisi!');
+            return false;
+        }
+
+        if (password.length < 6) {
+            this.showAlert('Password minimal 6 karakter!');
+            return false;
+        }
+        
+        return true;
     }
 
     showLoading(isLoading) {
@@ -171,61 +178,55 @@ class RegisterView {
         }
     }
 
-    // Update the showAlert and showSuccess methods in both login-view.js and register-view.js
-
-showAlert(message) {
-    const alertContainer = document.getElementById('alertContainer');
-    if (!alertContainer) return;
-    
-    // Remove any existing alerts
-    const existingAlert = document.querySelector('.alert');
-    if (existingAlert) {
-      existingAlert.remove();
+    showAlert(message) {
+        const alertContainer = document.getElementById('alertContainer');
+        if (!alertContainer) return;
+        
+        // Remove any existing alerts
+        const existingAlert = document.querySelector('.alert');
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+        
+        const alertElement = document.createElement('div');
+        alertElement.className = 'alert alert-danger';
+        alertElement.style.cssText = 'position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background-color: #f44336; color: white; padding: 12px 24px; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 1050; max-width: 90%;';
+        alertElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+        
+        alertContainer.appendChild(alertElement);
+        
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+            alertElement.style.opacity = '0';
+            alertElement.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => alertElement.remove(), 500);
+        }, 3000);
     }
     
-    const alertElement = document.createElement('div');
-    alertElement.className = 'alert alert-danger';
-    alertElement.style.cssText = 'position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background-color: #f44336; color: white; padding: 12px 24px; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 1050; max-width: 90%;';
-    alertElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-    
-    alertContainer.appendChild(alertElement);
-    
-    // Auto-hide after 3 seconds
-    setTimeout(() => {
-      alertElement.style.opacity = '0';
-      alertElement.style.transition = 'opacity 0.5s ease';
-      setTimeout(() => alertElement.remove(), 500);
-    }, 3000);
-  }
-  
-  showSuccess(message) {
-    this.showLoading(false);
-    
-    const alertContainer = document.getElementById('alertContainer');
-    if (!alertContainer) return;
-    
-    // Remove any existing alerts
-    const existingAlert = document.querySelector('.alert');
-    if (existingAlert) {
-      existingAlert.remove();
-    }
-    
-    const alertElement = document.createElement('div');
-    alertElement.className = 'alert alert-success';
-    alertElement.style.cssText = 'position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background-color: #4CAF50; color: white; padding: 12px 24px; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 1050; max-width: 90%;';
-    alertElement.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
-    
-    alertContainer.appendChild(alertElement);
-    
-    // Auto-hide after 2 seconds
-    setTimeout(() => {
-      alertElement.style.opacity = '0';
-      alertElement.style.transition = 'opacity 0.5s ease';
-      setTimeout(() => alertElement.remove(), 500);
-    }, 2000);
-  }
-
-    setRegisterSubmitHandler(handler) {
-        this.onRegisterSubmit = handler;
+    showSuccess(message) {
+        this.showLoading(false);
+        
+        const alertContainer = document.getElementById('alertContainer');
+        if (!alertContainer) return;
+        
+        // Remove any existing alerts
+        const existingAlert = document.querySelector('.alert');
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+        
+        const alertElement = document.createElement('div');
+        alertElement.className = 'alert alert-success';
+        alertElement.style.cssText = 'position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background-color: #4CAF50; color: white; padding: 12px 24px; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 1050; max-width: 90%;';
+        alertElement.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+        
+        alertContainer.appendChild(alertElement);
+        
+        // Auto-hide after 2 seconds
+        setTimeout(() => {
+            alertElement.style.opacity = '0';
+            alertElement.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => alertElement.remove(), 500);
+        }, 2000);
     }
 }

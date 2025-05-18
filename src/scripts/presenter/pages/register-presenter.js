@@ -1,15 +1,12 @@
-// Change in register-presenter.js
-class RegisterPresenter {  // Changed from LoginPresenter
+class RegisterPresenter {
     constructor({ view, apiService, router }) {
         console.log('RegisterPresenter constructor called');
         this.view = view;
         this.apiService = apiService;
         this.router = router || window.router;
         
-        // Log when setting the handler
-        console.log('Setting register submit handler');
-        this.view.setRegisterSubmitHandler(this.onRegisterSubmit.bind(this));
-        console.log('Register submit handler set');
+        // Set this presenter as the view's presenter
+        this.view.setPresenter(this);
     }
     
     init() {
@@ -17,19 +14,25 @@ class RegisterPresenter {  // Changed from LoginPresenter
     }
 
     async onRegisterSubmit(name, email, password) {
+        // Let the view validate the form first
+        if (!this.view.validateForm(name, email, password)) {
+            return;
+        }
+        
         try {
             console.log('Register submit handler called');
             this.view.showLoading(true);
             
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
+            // Use API service to register the user
             const result = await this.apiService.register(name, email, password);
             console.log('Register success:', result);
 
+            // Show success message in the view
             this.view.showSuccess('✅ Pendaftaran berhasil! Silakan login.');
 
+            // Navigate to login page after a short delay
             setTimeout(() => {
-                this.router.navigateTo('/masuk');
+                this.navigateToLogin();
             }, 1000); 
 
             return true;
@@ -37,7 +40,11 @@ class RegisterPresenter {  // Changed from LoginPresenter
             console.error('Register error in presenter:', error);
             this.view.showAlert(error.message || 'Terjadi kesalahan saat mendaftar');
             this.view.showLoading(false);
-            throw error;
+            return false;
         }
+    }
+
+    navigateToLogin() {
+        this.router.navigateTo('/masuk');
     }
 }

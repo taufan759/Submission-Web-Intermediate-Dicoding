@@ -1,14 +1,27 @@
+// src/scripts/view/pages/home-view.js (Updated)
+import networkStatus from '../../utils/network-status.js';
+
 class HomeView {
   constructor() {
     this.container = document.querySelector('#mainContent');
+    this.presenter = null;
     this.map = null;
     this.markers = [];
-    this.stories = [];
+    this.storiesContainer = null;
+    this.loadingIndicator = null;
+  }
+
+  setPresenter(presenter) {
+    this.presenter = presenter;
+    console.log('HomeView: Presenter set successfully');
   }
 
   render() {
     console.log('HomeView render called');
     document.title = 'PetaBicara - Cerita Bermakna';
+    
+    // Clear any existing content
+    this.container.innerHTML = '';
     
     this.container.innerHTML = `
       <section class="hero-section">
@@ -25,6 +38,12 @@ class HomeView {
       <section class="stories-section">
         <div class="container">
           <h2 class="section-title">Cerita Terbaru</h2>
+          <div class="connection-status">
+            <span id="connectionIndicator" class="${networkStatus.isOnline() ? 'online' : 'offline'}">
+              <i class="fas ${networkStatus.isOnline() ? 'fa-wifi' : 'fa-wifi-slash'}" aria-hidden="true"></i>
+              ${networkStatus.isOnline() ? 'Online' : 'Offline Mode'}
+            </span>
+          </div>
           <div class="stories-grid" id="storiesContainer">
             <div class="loading-indicator" id="loadingIndicator">
               <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
@@ -63,6 +82,35 @@ class HomeView {
         </div>
       </section>
 
+      <section class="offline-features">
+        <div class="container">
+          <h2 class="section-title">Fitur Offline</h2>
+          <div class="features-container">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-cloud-download-alt"></i>
+              </div>
+              <h3>Simpan & Baca Offline</h3>
+              <p>Cerita akan disimpan di perangkat Anda sehingga dapat dibaca bahkan tanpa koneksi internet</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-paper-plane"></i>
+              </div>
+              <h3>Tambah Cerita Offline</h3>
+              <p>Tambahkan cerita bahkan saat tidak ada koneksi, dan akan otomatis diunggah saat online kembali</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-bell"></i>
+              </div>
+              <h3>Notifikasi</h3>
+              <p>Dapatkan notifikasi saat ada cerita baru yang dibagikan dari lokasi yang Anda minati</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="testimonials">
         <div class="container">
           <h2 class="section-title">Kata Pengguna</h2>
@@ -86,86 +134,136 @@ class HomeView {
       </section>
     `;
 
+    // Add styles for components
+    this._addStyles();
+    
+    // Initialize elements
     this.storiesContainer = document.getElementById('storiesContainer');
     this.loadingIndicator = document.getElementById('loadingIndicator');
+    this.connectionIndicator = document.getElementById('connectionIndicator');
     
-    // Initialize the map
-    this._initMap();
+    // Update connection status when network status changes
+    networkStatus.addListener(this._updateConnectionStatus.bind(this));
     
-    // Load stories
-    console.log('Starting to load stories');
+    // Ensure elements are found
+    if (!this.storiesContainer) {
+      console.error('storiesContainer element not found');
+    }
+    
+    if (!this.loadingIndicator) {
+      console.error('loadingIndicator element not found');
+    }
+    
+    // Show loading state
     this.showLoading();
     
-    // If presenter is set, load stories
-    if (this.presenter) {
-      this.presenter.loadStories();
-    } else {
-      console.error('Presenter not set in HomeView');
-      this.hideLoading();
-      this.storiesContainer.innerHTML = '<p>Error: Unable to load stories</p>';
-    }
-
-    // Add styles for new components
-    this._addStyles();
-  }
-
-  _initMap() {
-    const mapElem = document.getElementById('storyMap');
-    if (!mapElem) return;
-
+    // Request stories from presenter with a slight delay to ensure DOM is ready
     setTimeout(() => {
-      this.map = L.map('storyMap').setView([-2.5489, 118.0149], 5);
-      
-      // Add OpenStreetMap as the base layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(this.map);
-
-      // Add markers for stories with location
-      if (this.stories && this.stories.length > 0) {
-        this._addStoriesToMap(this.stories);
+      if (this.presenter) {
+        console.log('HomeView: Requesting stories from presenter');
+        this.presenter.loadStories();
+      } else {
+        console.error('Presenter not set in HomeView');
+        this.renderError('Error: Unable to load stories. Presenter not initialized.');
       }
     }, 100);
   }
 
-  _addStoriesToMap(stories) {
-    if (!this.map) return;
-    
-    // Clear existing markers
-    if (this.markers.length > 0) {
-      this.markers.forEach(marker => {
-        this.map.removeLayer(marker);
-      });
-      this.markers = [];
+  _updateConnectionStatus(isOnline) {
+    if (this.connectionIndicator) {
+      this.connectionIndicator.className = isOnline ? 'online' : 'offline';
+      this.connectionIndicator.innerHTML = `
+        <i class="fas ${isOnline ? 'fa-wifi' : 'fa-wifi-slash'}" aria-hidden="true"></i>
+        ${isOnline ? 'Online' : 'Offline Mode'}
+      `;
     }
-    
-    // Add markers for stories with location
-    stories.forEach(story => {
-      if (story.lat && story.lon) {
-        const marker = L.marker([story.lat, story.lon])
-          .addTo(this.map)
-          .bindPopup(`
-            <div class="map-popup">
-              <h3>${story.name}</h3>
-              <p>${story.description.substring(0, 100)}${story.description.length > 100 ? '...' : ''}</p>
-              <img src="${story.photoUrl}" alt="${story.name}" style="width:100%;max-width:200px;">
-            </div>
-          `);
-        this.markers.push(marker);
-      }
-    });
   }
 
-  setPresenter(presenter) {
-    this.presenter = presenter;
-  }
-  
-  showStories(stories) {
-    console.log('Showing stories:', stories);
-    this.stories = stories;
+  // Method to display loaded stories
+  renderStories(stories) {
+    console.log('HomeView.renderStories called with', stories ? stories.length : 0, 'stories');
+    
+    // Hide loading indicator
     this.hideLoading();
     
+    // Check if stories exist
     if (!stories || stories.length === 0) {
+      this.renderEmptyState();
+      return;
+    }
+    
+    // Clear container
+    if (this.storiesContainer) {
+      this.storiesContainer.innerHTML = '';
+      
+      // Render each story
+      stories.forEach(story => {
+        const storyCard = document.createElement('div');
+        storyCard.className = 'story-card';
+        
+        // Add offline badge if this is an offline story
+        const offlineBadge = story.isOffline ? 
+          `<div class="offline-badge" title="Cerita ini disimpan secara offline dan akan diunggah saat online">
+            <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+          </div>` : '';
+        
+        storyCard.innerHTML = `
+          <div class="story-image">
+            <img src="${story.photoUrl}" alt="Cerita dari ${story.name}" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+            ${offlineBadge}
+          </div>
+          <div class="story-content">
+            <h3>${story.name}</h3>
+            <p>${story.description ? story.description.substring(0, 80) + (story.description.length > 80 ? '...' : '') : 'Tidak ada deskripsi'}</p>
+            <div class="story-meta">
+              <div class="author">
+                <i class="fas fa-user"></i> ${story.name}
+              </div>
+              <div class="date">
+                <i class="fas fa-calendar"></i> ${this._formatDate(story.createdAt)}
+              </div>
+            </div>
+            ${story.isOffline ? 
+              `<div class="story-actions">
+                <button class="btn-delete-offline" data-id="${story.id}">
+                  <i class="fas fa-trash-alt" aria-hidden="true"></i> Hapus Draft
+                </button>
+              </div>` : ''}
+          </div>
+        `;
+        this.storiesContainer.appendChild(storyCard);
+        
+        // Add delete event listener if this is an offline story
+        if (story.isOffline) {
+          const deleteButton = storyCard.querySelector('.btn-delete-offline');
+          if (deleteButton) {
+            deleteButton.addEventListener('click', (e) => {
+              e.preventDefault();
+              const storyId = deleteButton.getAttribute('data-id');
+              this.confirmDeleteOfflineStory(storyId);
+            });
+          }
+        }
+      });
+    } else {
+      console.error('storiesContainer is not defined');
+    }
+  }
+  
+  confirmDeleteOfflineStory(storyId) {
+    if (!confirm('Anda yakin ingin menghapus draft cerita ini? Tindakan ini tidak dapat dibatalkan.')) {
+      return;
+    }
+    
+    if (this.presenter) {
+      this.presenter.deleteStory(storyId);
+    }
+  }
+  
+  // Method to display empty state when no stories exist
+  renderEmptyState() {
+    console.log('HomeView.renderEmptyState called');
+    if (this.storiesContainer) {
       this.storiesContainer.innerHTML = `
         <div class="empty-state">
           <i class="fas fa-book-open fa-3x" aria-hidden="true"></i>
@@ -176,54 +274,95 @@ class HomeView {
           </a>
         </div>
       `;
-      return;
     }
+  }
+  
+  // Method to render error message with retry button
+  renderError(message) {
+    console.log('HomeView.renderError called with message:', message);
+    this.hideLoading();
     
-    this.storiesContainer.innerHTML = '';
-    
-    stories.forEach(story => {
-      const storyCard = document.createElement('div');
-      storyCard.className = 'story-card';
-      storyCard.innerHTML = `
-        <div class="story-image">
-          <img src="${story.photoUrl}" alt="Cerita dari ${story.name}">
-        </div>
-        <div class="story-content">
-          <h3>${story.name}</h3>
-          <p>${story.description.substring(0, 80)}${story.description.length > 80 ? '...' : ''}</p>
-          <div class="story-meta">
-            <div class="author">
-              <i class="fas fa-user"></i> ${story.name}
-            </div>
-            <div class="date">
-              <i class="fas fa-calendar"></i> ${this._formatDate(story.createdAt)}
-            </div>
-          </div>
+    if (this.storiesContainer) {
+      this.storiesContainer.innerHTML = `
+        <div class="error-message">
+          <p>Error: ${message || 'Unable to load stories'}</p>
+          <button id="retryButton" class="btn btn-primary">Coba Lagi</button>
         </div>
       `;
-      this.storiesContainer.appendChild(storyCard);
-    });
-    
-    // Add markers to map if map is initialized
-    if (this.map) {
-      this._addStoriesToMap(stories);
+      
+      // Add retry button event listener
+      const retryButton = document.getElementById('retryButton');
+      if (retryButton) {
+        retryButton.addEventListener('click', () => {
+          console.log('Retry button clicked');
+          this.showLoading();
+          if (this.presenter) {
+            this.presenter.loadStories();
+          }
+        });
+      }
     }
   }
 
   _formatDate(dateString) {
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    return new Date(dateString).toLocaleDateString('id-ID', options);
+    if (!dateString) return 'Tanggal tidak tersedia';
+    
+    try {
+      const options = { day: 'numeric', month: 'long', year: 'numeric' };
+      return new Date(dateString).toLocaleDateString('id-ID', options);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return dateString;
+    }
   }
 
   showLoading() {
+    console.log('HomeView.showLoading called');
     if (this.loadingIndicator) {
       this.loadingIndicator.style.display = 'flex';
+    }
+    
+    if (this.storiesContainer) {
+      // Clear any previous error messages
+      const errorMessage = this.storiesContainer.querySelector('.error-message');
+      if (errorMessage) {
+        errorMessage.remove();
+      }
     }
   }
 
   hideLoading() {
+    console.log('HomeView.hideLoading called');
     if (this.loadingIndicator) {
       this.loadingIndicator.style.display = 'none';
+    }
+  }
+
+  showStoryDeleted(storyId) {
+    // Show a temporary notification
+    const notification = document.createElement('div');
+    notification.className = 'temp-notification';
+    notification.innerHTML = `
+      <div class="notification-content">
+        <i class="fas fa-check-circle" aria-hidden="true"></i>
+        <span>Draft cerita berhasil dihapus</span>
+      </div>
+    `;
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      notification.classList.add('fade-out');
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 500);
+    }, 3000);
+    
+    // Refresh stories
+    if (this.presenter) {
+      this.presenter.loadStories();
     }
   }
 
@@ -254,6 +393,33 @@ class HomeView {
           color: #4a5568;
         }
         
+        /* Connection Status */
+        .connection-status {
+          display: flex;
+          justify-content: flex-end;
+          margin-bottom: 1rem;
+        }
+        
+        #connectionIndicator {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 5px 10px;
+          border-radius: 20px;
+          font-size: 0.875rem;
+          font-weight: 500;
+        }
+        
+        #connectionIndicator.online {
+          background-color: #d4edda;
+          color: #155724;
+        }
+        
+        #connectionIndicator.offline {
+          background-color: #f8d7da;
+          color: #721c24;
+        }
+        
         /* Stories Grid */
         .stories-section {
           margin-bottom: 3rem;
@@ -271,6 +437,7 @@ class HomeView {
           overflow: hidden;
           box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
           transition: transform 0.3s ease;
+          position: relative;
         }
         
         .story-card:hover {
@@ -280,12 +447,27 @@ class HomeView {
         .story-image {
           height: 200px;
           overflow: hidden;
+          position: relative;
         }
         
         .story-image img {
           width: 100%;
           height: 100%;
           object-fit: cover;
+        }
+        
+        .offline-badge {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background-color: rgba(0, 0, 0, 0.7);
+          color: white;
+          padding: 5px 10px;
+          border-radius: 20px;
+          font-size: 0.75rem;
+          display: flex;
+          align-items: center;
+          gap: 5px;
         }
         
         .story-content {
@@ -307,6 +489,30 @@ class HomeView {
           justify-content: space-between;
           color: #718096;
           font-size: 0.875rem;
+        }
+        
+        .story-actions {
+          margin-top: 1rem;
+          display: flex;
+          justify-content: flex-end;
+        }
+        
+        .btn-delete-offline {
+          background-color: #f56565;
+          color: white;
+          border: none;
+          padding: 5px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 0.875rem;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          transition: background-color 0.2s;
+        }
+        
+        .btn-delete-offline:hover {
+          background-color: #e53e3e;
         }
         
         /* How It Works */
@@ -333,13 +539,13 @@ class HomeView {
           margin: 0.5rem auto 0;
         }
         
-        .steps-container {
+        .steps-container, .features-container {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
           gap: 1.5rem;
         }
         
-        .step-card {
+        .step-card, .feature-card {
           text-align: center;
           padding: 2rem;
           background-color: white;
@@ -348,11 +554,11 @@ class HomeView {
           transition: transform 0.3s ease;
         }
         
-        .step-card:hover {
+        .step-card:hover, .feature-card:hover {
           transform: translateY(-5px);
         }
         
-        .step-icon {
+        .step-icon, .feature-icon {
           width: 70px;
           height: 70px;
           display: flex;
@@ -365,16 +571,9 @@ class HomeView {
           margin: 0 auto 1rem;
         }
         
-        /* Map Section */
-        .map-section {
+        /* Offline Features */
+        .offline-features {
           margin-bottom: 3rem;
-        }
-        
-        .story-map {
-          height: 500px;
-          border-radius: 10px;
-          overflow: hidden;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         
         /* Testimonials */
@@ -455,19 +654,44 @@ class HomeView {
           grid-column: 1 / -1;
         }
         
-        /* Map Popup */
-        .map-popup {
-          max-width: 250px;
+        /* Error Message */
+        .error-message {
+          text-align: center;
+          padding: 2rem;
+          background-color: #fff3f3;
+          border-radius: 10px;
+          border: 1px solid #ffcccc;
+          margin: 1rem 0;
+          grid-column: 1 / -1;
         }
         
-        .map-popup h3 {
-          margin-top: 0.5rem;
-          margin-bottom: 0.5rem;
+        .error-message p {
+          color: #e53e3e;
+          margin-bottom: 1rem;
         }
         
-        .map-popup img {
-          border-radius: 5px;
-          margin-top: 0.5rem;
+        /* Temporary Notification */
+        .temp-notification {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background-color: #d4edda;
+          color: #155724;
+          padding: 10px 15px;
+          border-radius: 4px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          z-index: 9999;
+          animation: slide-in 0.3s ease-out;
+        }
+        
+        .notification-content {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        
+        .temp-notification.fade-out {
+          animation: fade-out 0.5s ease-out forwards;
         }
         
         /* Responsive Adjustments */
@@ -480,11 +704,7 @@ class HomeView {
             grid-template-columns: 1fr;
           }
           
-          .story-map {
-            height: 300px;
-          }
-          
-          .step-icon {
+          .step-icon, .feature-icon {
             width: 50px;
             height: 50px;
             font-size: 1.25rem;
@@ -495,3 +715,5 @@ class HomeView {
     }
   }
 }
+
+export default HomeView;
